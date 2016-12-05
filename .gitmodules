@@ -1,0 +1,3 @@
+[submodule "Source/Cgen.Audio/Dependencies/NVorbis"]
+	path = Source/Cgen.Audio/Dependencies/NVorbis
+	url = https://github.com/SirusDoma/NVorbis
