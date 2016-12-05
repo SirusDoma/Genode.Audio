@@ -283,4 +283,4 @@ List of dependencies:
 
 ## License ##
 
-This is an open-sourced library licensed under the [zlib/libpng license](http://github.com/SirusDoma/Cgen.Audio/blob/master/LICENSE.txt).
+This is an open-sourced library licensed under the [MIT License](http://github.com/SirusDoma/Cgen.Audio/blob/master/LICENSE).
