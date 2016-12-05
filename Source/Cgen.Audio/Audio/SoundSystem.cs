@@ -122,7 +122,9 @@ namespace Cgen.Audio
             }
 
             // Create the source handle, in case it is first call
-            if (source.Handle <= 0)
+            bool valid = false;
+            ALChecker.Check(() => valid = AL.IsSource(source.Handle));
+            if (!valid)
             {
                 int handle = 0;
                 ALChecker.Check(() => handle = AL.GenSource());
@@ -181,9 +183,18 @@ namespace Cgen.Audio
                 return;
             }
 
+            // Check whether the specified source has valid handle
+            bool valid = false;
+            ALChecker.Check(() => valid = AL.IsSource(source.Handle));
+
+            // ignore if its not valid
+            if (!valid)
+                return;
+
             // Pause the sound
             try
             {
+
                 _pause.Invoke(source, null);
             }
             catch (Exception ex)
@@ -221,6 +232,14 @@ namespace Cgen.Audio
             {
                 return;
             }
+
+            // Check whether the specified source has valid handle
+            bool valid = false;
+            ALChecker.Check(() => valid = AL.IsSource(source.Handle));
+
+            // ignore if its not valid
+            if (!valid)
+                return;
 
             // Stop the sound
             try
@@ -291,9 +310,15 @@ namespace Cgen.Audio
                     continue;
                 }
 
-                if (_sources[i].Status == SoundStatus.Stopped && !_sources[i].IsLooping)
+                // Check whether the specified source has valid handle
+                bool valid = false;
+                ALChecker.Check(() => valid = AL.IsSource(_sources[i].Handle));
+
+                if (!valid || ( _sources[i].Status == SoundStatus.Stopped && !_sources[i].IsLooping))
                 {
-                    _sources[i].Dispose();
+                    // No need to dispose invalid source handle
+                    if (valid)
+                        _sources[i].Dispose();
                     _sources.RemoveAt(i);
                 }
             }

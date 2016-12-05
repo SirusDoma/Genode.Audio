@@ -123,9 +123,16 @@ namespace Cgen.Audio
             }
 
             // Attach the sound if it's not attached yet
-            if (!Buffer.IsAttached(this))
+            // In case the first time call or the Source handle is replaced due to recycle
+            int buffer = 0;
+            ALChecker.Check(() => AL.GetSource(Handle, ALGetSourcei.Buffer, out buffer));
+
+            if (!Buffer.IsAttached(this) || Buffer.Handle != buffer)
             {
-                Buffer.AttachSound(this);
+                // Only attach if its not attached
+                if (!Buffer.IsAttached(this))
+                    Buffer.AttachSound(this);
+
                 ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, _buffer.Handle));
             }
 
