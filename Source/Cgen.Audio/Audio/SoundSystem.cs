@@ -72,11 +72,25 @@ namespace Cgen.Audio
         }
 
         /// <summary>
+        /// Gets all available playback device name.
+        /// </summary>
+        /// <returns>An array of string contains playback device name.</returns>
+        public string[] GetAvailableDevices()
+        {
+            return new List<string>(AudioContext.AvailableDevices).ToArray();
+        }
+
+        /// <summary>
         /// Initialize the <see cref="SoundSystem"/> using specified device name.
         /// </summary>
         /// <param name="device">The audio device name.</param>
         public void Initialize(string device)
         {
+            if (!AudioContext.AvailableDevices.Contains(device))
+            {
+                throw new ArgumentException("Invalid device name");
+            }
+
             AudioDevice.Initialize(new AudioContext(device));
         }
 
