@@ -1,7 +1,7 @@
 # Cgen.Audio #
 Audio Submodule of CygnusJam Game Engine.
 
-- **Author**: Alghi Fariansyah
+- **Author**: SirusDoma
 - **Email**: com@cxo2.me
 - **Latest Version**: 1.0
 
