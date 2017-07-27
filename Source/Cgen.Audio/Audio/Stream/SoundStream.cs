@@ -17,7 +17,6 @@ namespace Cgen.Audio
     public abstract class SoundStream : SoundSource
     {
         private const int BUFFER_COUNT   = 3;
-        private const int BUFFER_RETRIES = 2;
         private readonly object _mutex   = new object();
 
         private Thread   _thread;
@@ -214,7 +213,6 @@ namespace Cgen.Audio
                 int nbProcessed = 0;
                 ALChecker.Check(() => AL.GetSource(Handle, ALGetSourcei.BuffersProcessed, out nbProcessed));
                 
-
                 while (nbProcessed-- > 0)
                 {
                     // Pop the first unused buffer from the queue
@@ -224,11 +222,13 @@ namespace Cgen.Audio
                     // Find its number
                     int bufferNum = 0;
                     for (int i = 0; i < BUFFER_COUNT; ++i)
+                    {
                         if (_buffers[i] == buffer)
                         {
                             bufferNum = i;
                             break;
                         }
+                    }
 
                     // Retrieve its size and add it to the samples count
                     if (_endBuffers[bufferNum])
@@ -285,43 +285,34 @@ namespace Cgen.Audio
             ALChecker.Check(() => AL.DeleteBuffers(_buffers));
         }
 
-        private bool FillAndPushBuffer(int bufferNum, bool immediateLoop = false)
+        private bool FillAndPushBuffer(int bufferNum)
         {
             bool requestStop = false;
 
             // Acquire audio data
             short[] samples = null;
-            for (int retryCount = 0; !OnGetData(out samples) && (retryCount < BUFFER_RETRIES); ++retryCount)
+            if (!OnGetData(out samples))
             {
                 // Mark the buffer as the last one (so that we know when to reset the playing position)
                 _endBuffers[bufferNum] = true;
 
                 // Check if the stream must loop or stop
-                if (!_loop)
+                if (_loop)
+                {
+                    // Return to the beginning of the stream source
+                    OnSeek(TimeSpan.Zero);
+
+                    // If we previously had no data, try to fill the buffer once again
+                    if (samples == null || (samples.Length == 0))
+                    {
+                        return FillAndPushBuffer(bufferNum);
+                    }
+                }
+                else
                 {
                     // Not looping: request stop
                     requestStop = true;
-                    break;
                 }
-
-                // Return to the beginning of the stream source
-                OnSeek(TimeSpan.Zero);
-
-                // If we got data, break and process it, else try to fill the buffer once again
-                if (samples != null && (samples.Length > 0))
-                {
-                    break;
-                }
-
-                // If immediateLoop is specified, we have to immediately adjust the sample count
-                if (immediateLoop)
-                {
-                    // We just tried to begin preloading at EOF: reset the sample count
-                    _processed = 0;
-                    _endBuffers[bufferNum] = false;
-                }
-
-                // We're a looping sound that got no data, so we retry onGetData()
             }
 
             // Fill the buffer if some data was returned
@@ -336,11 +327,6 @@ namespace Cgen.Audio
                 // Push it into the sound queue
                 ALChecker.Check(() => AL.SourceQueueBuffer(Handle, buffer));
             }
-            else
-            {
-                // If we get here, we most likely ran out of retries
-                requestStop = true;
-            }
 
             return requestStop;
         }
@@ -351,7 +337,7 @@ namespace Cgen.Audio
             bool requestStop = false;
             for (int i = 0; (i < BUFFER_COUNT) && !requestStop; ++i)
             {
-                if (FillAndPushBuffer(i, (i == 0)))
+                if (FillAndPushBuffer(i))
                     requestStop = true;
             }
 
