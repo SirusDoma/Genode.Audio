@@ -10,6 +10,11 @@ namespace Cgen.Audio
     public enum SoundStatus
     {
         /// <summary>
+        /// Sound is just barely loaded.
+        /// </summary>
+        Initial,
+
+        /// <summary>
         /// Sound is not playing.
         /// </summary>
         Stopped,
