@@ -74,9 +74,9 @@ Ignoring update cycle of `SoundSystem` may cause undefined behavior, especially 
 
 Either `Sound` or `Music`, both inherit `SoundSource` elements, which provides basic audio properties and behaviors across audio implementation. In other words, you can implement your own Audio implementation by inherit `SoundSource` abstract class.
 
-`Sound` is a lightweight object that plays loaded audio data from a `SoundBuffer`. The audio data (or buffer) is loaded directly to memory as whole. Thus, the should be used for small sounds that can fit in memory and should suffer no lag when they are played.  
+`Sound` is a lightweight object that plays loaded audio data from a `SoundBuffer`. The audio data (or buffer) is loaded directly to memory as whole. Thus, should be used for small sounds that can fit in memory and should suffer no lag when they are played.  
 
-For example are sound effect like door bells, or game effect such as gun shot, footstep, etc.
+For example `Sound` is great for effect like door bells, or game effect such as gun shot, footstep, etc.
 In order to create `Sound`, `SoundBuffer` is required, you can construct `SoundBuffer` from file, `Stream` or even an array of bytes. Note that `SoundBuffer` can be used by multiple instance of `Sound`. Do **NOT** create multiple `SoundBuffer` with same audio data, reuse it instead to save memory.
 
 ```
@@ -94,7 +94,7 @@ In order to create `Sound`, `SoundBuffer` is required, you can construct `SoundB
 
 `Music` doesn't load all the audio data into memory, instead it streams it on the fly from the source file / data. It is typically used to play compressed music that lasts several minutes, and would otherwise take many seconds to load and take hundreds of MB in memory due large amount of decoded samples.
 
-Constructing `Music` object rather than straightforward than `Sound` object, you don't have to create `SoundBuffer` because `Music` will stream instead load whole samples directly into memory.
+Constructing `Music` object straightforward rather than `Sound` object, you don't have to create `SoundBuffer` because `Music` will stream instead load whole samples directly into memory.
 
 ```
     // Create a music object
