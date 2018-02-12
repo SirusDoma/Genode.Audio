@@ -186,9 +186,10 @@ namespace Cgen.Audio
         public override void Dispose()
         {
             base.Dispose();
-            if (ALChecker.Check(() => AL.IsBuffer((int)Buffer?.Handle)))
+            
+            if (Buffer != null && ALChecker.Check(() => AL.IsBuffer((int)Buffer.Handle)))
             {
-                ALChecker.Check(() => AL.DeleteBuffer((int)Buffer?.Handle));
+                ALChecker.Check(() => AL.DeleteBuffer((int)Buffer.Handle));
             }
 
             //var sources = SoundSystem.Instance.GetPlayingSources();

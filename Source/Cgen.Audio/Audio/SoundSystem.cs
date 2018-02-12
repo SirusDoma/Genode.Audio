@@ -350,7 +350,8 @@ namespace Cgen.Audio
         public virtual void Dispose()
         {
             _sources.Clear();
-            foreach (var source in _allPools)
+            var pool = _allPools.ToArray();
+            foreach (int source in pool)
             {
                 var sound = new Sound(source);
 
