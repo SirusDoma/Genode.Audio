@@ -3,7 +3,7 @@ Audio Submodule of CygnusJam Game Engine.
 
 - **Author**: SirusDoma
 - **Email**: com@cxo2.me
-- **Latest Version**: 1.0
+- **Latest Version**: 1.4
 
 ## Summary ##
 
@@ -20,37 +20,64 @@ It is required to configure the Build Configuration Platform (`x86`/`x64`) of ta
 
 ## Documentation ##
 
-Currently, the engine doesn't have detailed API reference.
-Therefore, the basic usages is covered along with this document.
-
-Before getting started with the engine, you need to choose the proper usages of the engine, it depends on application that you are developing.
+Currently, the engine doesn't have detailed API reference and therefore, the basic usages is covered along with this document.
 
 ### 1. Initialization ###
 
-The `SoundSystem` engine is actually initialized on the fly, you don't even have to call any method to initialize or choosing which audio device that you should pick or configuring specific hardware dependent configuration.
-The engine will setup everything automagically.  
+The `SoundSystem` engine is actually initialized on the fly, you don't even have to call any method to initialize or choosing which audio device that you should pick or configuring specific hardware dependent configuration. The engine will setup everything automagically.  
 
 In case you want to initialize the `SoundSystem` explicitly, call `SoundSystem.Instance.Initialize()`
 
 ### 2. Handling Update Cycle ###
 
-As described in Usages Notes, the `SoundSystem` need to updated frequently in order to stream the sound buffer and manage sound source lifecycle properly.  
+As described in Usages Notes, the `SoundSystem` need to updated frequently in order to stream the sound buffer.  
 
-There are 2 ways to Update the `SoundSystem`
-- In a General Application (e.g: Winforms or WPF), it is recommended to use Automated Update Cycle by calling `SoundSystem.Instance.AutoUpdate();` at initialization of program. This will create a separate thread that automatically call `SoundSystem.Instance.Update()` each 10ms.  
+Technically, `SoundSystem` handle `SoundSource` lifecycle by poolling of stopped and un-used instances to overcome instancing limitation, this allow you to have `Sound` and `Music` instances as many as you wish.  
 
-- In a Game Application, call `SoundSystem.Instance.Update()` on each frame in the game loop.
+However, maximum `SoundSource`'s that can be played at the same time still exists, the hard limit of `SoundSource`'s may fairly different across multiple platforms, however the engine put constant hard limit up to **256 sources**. This number should be more than enough for all cases, even if you're trying to simulate an ochestra.  
+
+Unlike in the previous version of API, you will need call `SoundSystem.Instance.Update()` manually and regularly. Also, **You have to call the `SoundSystem.Instance.Update()` at the same thread as you play the `Sound` or `Music`**. In other words, you should **NOT** perform `SoundSystem.Instance.Play(sound)` or `SoundSystem.Instance.Play(music)` at different thread than update cycle!  
+
+This due to the engine limitation that cannot protect the `SoundSource` from thread race with mutex without suffering a stutter. However, you're still allowed to play the `Sound` and `Music` and call `SoundSystem.Instance.Update()` in a separate thread, as long they share same thread, you also may want to call `AudioDevice.MakeCurrent()` to make OpenAL running on your thread. 
+
+Following codes is a good example if you're using separate thread to handle `SoundSystem` update cycle:
+
+```
+    // Initialize music instance
+    var music = new Music('Path/To/Music.ogg');
+
+    // Launch new thread that play and update the system
+    var thread = new Thread(() => UpdateSystem(music));
+    thread.Start();
+    
+    // And the thread function
+    private void UpdateSystem(Music music)
+    {
+        // Make OpenAL to current thread
+        AudioDevice.MakeCurrent();
+
+        // Play the music
+        SoundSystem.Instance.Play(music);
+
+        // Update SoundSystem while music is playing
+        while (music.Status != SoundStatus.Stopped)
+        {
+            SoundSystem.Instance.Update();
+        }
+    }
+
+```
+
+Ignoring update cycle of `SoundSystem` may cause undefined behavior, especially when playing `Music` or playing multiple instance of `Sound`.
 
 ### 3. Creating a Sound / Music object ###
 
 Either `Sound` or `Music`, both inherit `SoundSource` elements, which provides basic audio properties and behaviors across audio implementation. In other words, you can implement your own Audio implementation by inherit `SoundSource` abstract class.
 
-There is no maximum instances for the `SoundSource`, you can create `Sound` or `Music` objects as much as you like. However, you can only play up to 255 `SoundSource` at the same time. This is more than enough to simulate an orchestra.
-
-`Sound` is a lightweight object that plays loaded audio data from a `SoundBuffer`. It should be used for small sounds that can fit in memory and should suffer no lag when they are played.  
+`Sound` is a lightweight object that plays loaded audio data from a `SoundBuffer`. The audio data (or buffer) is loaded directly to memory as whole. Thus, the should be used for small sounds that can fit in memory and should suffer no lag when they are played.  
 
 For example are sound effect like door bells, or game effect such as gun shot, footstep, etc.
-In order to create `Sound`, `SoundBuffer` is required, you can construct `SoundBuffer` from file, `Stream` or even an array of bytes
+In order to create `Sound`, `SoundBuffer` is required, you can construct `SoundBuffer` from file, `Stream` or even an array of bytes. Note that `SoundBuffer` can be used by multiple instance of `Sound`. Do **NOT** create multiple `SoundBuffer` with same audio data, reuse it instead to save memory.
 
 ```
     // Create a sound object
@@ -65,9 +92,9 @@ In order to create `Sound`, `SoundBuffer` is required, you can construct `SoundB
     Sound bell = new Sound(new SoundBuffer(audioData));
 ```
 
-`Music` doesn't load all the audio data into memory, instead it streams it on the fly from the source file. It is typically used to play compressed music that lasts several minutes, and would otherwise take many seconds to load and take hundreds of MB in memory due large amount of decoded samples.
+`Music` doesn't load all the audio data into memory, instead it streams it on the fly from the source file / data. It is typically used to play compressed music that lasts several minutes, and would otherwise take many seconds to load and take hundreds of MB in memory due large amount of decoded samples.
 
-Constructing `Music` object is similar to constructing `Sound` object, the main difference is you don't have to create `SoundBuffer` because `Music` will stream instead load whole samples into memory.
+Constructing `Music` object rather than straightforward than `Sound` object, you don't have to create `SoundBuffer` because `Music` will stream instead load whole samples directly into memory.
 
 ```
     // Create a music object
@@ -98,10 +125,9 @@ The `Sound` and `Music` provide more or less the same features, You can `Play`, 
 
     // You can also retrieve the status of sound
     Console.WriteLine(bell.Status); // SoundStatus.Stopped
-
-    // Once the sound is no longer needed, dispose it
-    bell.Dispose();
 ```
+
+Note that it is recommended that you leave the `Sound` and `Music` without disposing them. See *Cleanup* section for more information
 
 ### 5. Modifying Audio Elements ###
 
@@ -162,14 +188,18 @@ Note that `SoundGroup` uses method instead property to set the audio elements. `
 
 ### 7. Cleanup ###
 
-It is recommended to perform the cleanup before exiting the application or the library functionality is no longer required.  
+It is recommended that you do not disposing `SoundSource` (`Sound` or `Music`) right after it is not used, Disposing `SoundSource` will releasing OpenAL handle, which mean it cannot be reused and recycled by pool system of `SoundSystem`.    
+
+Disposing of `SoundSource` will not give you significant benefit both in term of memory usage or cpu utilization. Because the buffer will be enqueued anyway to save memory and keep `SoundSource` state reusable while the OpenAL handle itself only take small amount of bytes.  
+
+However, in case you're about to exit the program or library is no longer needed, it is recommended to perform the cleanup.  
 
 ```
     // Dispose SoundSystem
     SoundSystem.Instance.Dispose();
 ```
 
-Note this will stop all playing sounds and music instances and dispose them. Additionally, it will stop the automatic update cycle if it was requested before.  
+Note this will stop all playing sounds and music instances and dispose them, including the OpenAL that mentioned earlier.  
 
 Performing any playback operation or modifying audio properties is no longer safe after this point.
 
@@ -207,7 +237,7 @@ For example, you want to create your own OpenAL `Context` manually by yourself, 
 
 You can also call specific OpenAL function between playback functions (`Play()`, `Pause()` and `Stop()`). Unlike OpenGL, OpenAL may not contains specific states, however it is recommended to check for OpenAL error when performing OpenAL operations.  
 
-Cgen.Audio provides OpenAL Error Checker. It is part of internal module, but it exposed to public and you can use it.
+Cgen.Audio provides OpenAL Error Checker. It is part of low level module, but it exposed to public and you can use it.
 
 ```
     using Cgen.Internal.OpenAL;
@@ -241,6 +271,25 @@ In case you dislike lambda, perform error checking by calling `ALCheker.CheckErr
 Any error will printed via `Cgen.Logger`. Check and explore `Cgen.Internal.OpenAL.ALChecker` and `Cgen.Logger` for more information.
 
 
+## Extending Sound ##
+
+In addition to extending `SoundSystem`, `SoundStream` can be extended as well, this allow you to stream data from various source that `Music` cannot comprehend, such as network stream or audio recorder.
+
+In such cases, you should derive `SoundStream`. Following abstract methods need to be implemented:
+
+- `void Initialize(int channelCount, int sampleRate)`
+  You have to call this method. Depending at your implementation, this can be called anywhere (of course before the stream begin), but most of time, it is called right after your source stream / decoder is open and / or read partial information of the source audio data to gather `channelCount` and `sampleRate`.
+
+- `bool OnGetData(out short[] samples)`  
+  You have to override this method. It is responsible to read the samples from the source and will be called when the `SoundStream` is out of buffer to process. You will have to return boolean to indicate whether there is remaining sample to be streamed.
+
+- `void OnSeek(TimeSpan time)`
+  You have to override this method. This method will be called when `PlayingOffset` is changed by user, you will have to seek the position of source stream / decoder to the equally same as specified time. Sometimes it is impossible to seek the stream in certain cases, such as voice call. At that case, you can simply return the method and inform the user that seek is not available at current implementation.
+
+In addition to `SoundStream`, you cannot extend `Sound` class because it is fairly simple object that load `SoundBuffer` into memory. You can inherit `SoundSource` instead make your own Sound class, however you may need provide low level function during the implementation, such as providing buffer data to OpenAL handle manually.  
+
+In case you want to cover audio data that not supported or defined within library, then make your own `SoundDecoder` instead by inherit it and register it to `Decoders` class.
+
 ## Dependencies ##
 
 This library uses several dependencies to perform specific operations.
@@ -255,6 +304,15 @@ List of dependencies:
 - [NVorbis](https://github.com/SirusDoma/NVorbis)
 
 ## Version History ##
+
+### v1.5
+- Reworked `SoundSystem` `SoundSource` pooling
+- Reworked `SoundSource` audio states
+- Removed threading mechanic from `Music` and `SoundSystem`
+- Renamed `SoundReader` to `SoundDecoder`
+- Updated small amounts of OpenAL functions and states
+
+TODO: Rework `SoundGroup` to adapt dynamic states that caused by source pooling.
 
 ### v1.0
 - Complete Rewrite of the API
