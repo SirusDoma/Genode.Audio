@@ -73,11 +73,11 @@
     <Compile Include="Audio\AudioDevice.cs" />
     <Compile Include="Audio\Listener.cs" />
     <Compile Include="Audio\Music.cs" />
-    <Compile Include="Audio\Reader\Built-in\OggReader.cs" />
-    <Compile Include="Audio\Reader\Built-in\WavReader.cs" />
-    <Compile Include="Audio\Reader\Decoders.cs" />
-    <Compile Include="Audio\Reader\SampleInfo.cs" />
-    <Compile Include="Audio\Reader\SoundReader.cs" />
+    <Compile Include="Audio\Decoder\Built-in\OggDecoder.cs" />
+    <Compile Include="Audio\Decoder\Built-in\WavDecoder.cs" />
+    <Compile Include="Audio\Decoder\Decoders.cs" />
+    <Compile Include="Audio\Decoder\SampleInfo.cs" />
+    <Compile Include="Audio\Decoder\SoundDecoder.cs" />
     <Compile Include="Audio\Sound.cs" />
     <Compile Include="Audio\SoundBuffer.cs" />
     <Compile Include="Audio\SoundSystem.cs" />
@@ -88,7 +88,7 @@
     <Compile Include="Internal\AL\ALChecker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Systems\Action.cs" />
-    <Compile Include="Systems\Logger.cs" />
+    <Compile Include="Internal\Logger.cs" />
     <Compile Include="Systems\Vectors\Vector2.cs" />
     <Compile Include="Systems\Vectors\Vector3.cs" />
     <Compile Include="Systems\Vectors\Vector4.cs" />
