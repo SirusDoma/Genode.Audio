@@ -15,8 +15,18 @@ namespace Cgen.Audio
     /// </summary>
     public abstract class SoundSource : IDisposable
     {
-        private int        _source;
+        private readonly object _mutex = new object();
+        private int _source;
         private SoundGroup _group;
+
+        private bool _resetting       = false;
+        private float _volume         = 100f;
+        private Vector3 _position     = new Vector3(0, 0, 0);
+        private float _pitch          = 1f;
+        private bool _looping         = false;
+        private float _attenuation    = 1f;
+        private float _minDistance    = 1f;
+        private bool _relativeListner = false;
 
         /// <summary>
         /// Gets the OpenAL native handle of current <see cref="SoundSource"/> object.
@@ -69,20 +79,15 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
+                if (Handle <= 0 || !Validate())
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return SoundStatus.Stopped;
+                    return SoundStatus.Initial;
                 }
 
-                ALSourceState state = 0;
-                ALChecker.Check(() => state = AL.GetSourceState(_source));
-
+                ALSourceState state = ALChecker.Check(() => AL.GetSourceState(Handle));
                 switch (state)
                 {
-                    case ALSourceState.Initial:
+                    case ALSourceState.Initial: return SoundStatus.Initial;
                     case ALSourceState.Stopped: return SoundStatus.Stopped;
                     case ALSourceState.Paused:  return SoundStatus.Paused;
                     case ALSourceState.Playing: return SoundStatus.Playing;
@@ -99,31 +104,19 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
-                {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return 0f;
-                } 
-
-                float pitch = 0;
-                ALChecker.Check(() => AL.GetSource(_source, ALSourcef.Pitch, out pitch));
-
-                return pitch;
+                return _pitch;
             }
             set
             {
 
-                if (Handle <= 0)
+                if (_pitch != value || _resetting)
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
+                    _pitch = value;
+                    if (Handle <= 0)
+                        return;
 
-                    return;
+                    ALChecker.Check(() => AL.Source(Handle, ALSourcef.Pitch, value));
                 }
-
-                ALChecker.Check(() => AL.Source(_source, ALSourcef.Pitch, value));
             }
         }
 
@@ -134,30 +127,18 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
-                {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return 0f;
-                }
-
-                float gain = 0;
-                ALChecker.Check(() => AL.GetSource(_source, ALSourcef.Gain, out gain));
-
-                return gain * 100f;
+                return _volume;
             }
             set
             {
-                if (Handle <= 0)
+                if (_volume != value || _resetting)
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
+                    _volume = value;
+                    if (Handle <= 0)
+                        return;
 
-                    return;
+                    ALChecker.Check(() => AL.Source(Handle, ALSourcef.Gain, value * 0.01f));
                 }
-
-                ALChecker.Check(() => AL.Source(_source, ALSourcef.Gain, value * 0.01f));
             }
         }
 
@@ -168,30 +149,34 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
-                {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return Vector3.Zero;
-                }
-
-                float[] positions = new float[3];
-                ALChecker.Check(() => AL.GetSource(_source, ALSource3f.Position, out positions[0], out positions[1], out positions[1]));
-
-                return new Vector3(positions[0], positions[1], positions[2]);
+                return _position;
             }
             set
             {
-                if (Handle <= 0)
+                if (_position != value || _resetting)
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
+                    _position = value;
+                    if (Handle <= 0)
+                        return;
 
-                    return;
+                    ALChecker.Check(() => AL.Source(Handle, ALSource3f.Position, value.X, value.Y, value.Z));
                 }
+            }
+        }
 
-                ALChecker.Check(() => AL.Source(_source, ALSource3f.Position, value.X, value.Y, value.Z));
+        /// <summary>
+        /// Gets or sets the X-coordinate position of current <see cref="SoundSource"/> object in audio scene.
+        /// </summary>
+        public float Pan
+        {
+            get
+            {
+                return Position.X;
+            }
+            set
+            {
+                var position = Position;
+                Position = new Vector3(value, position.Y, position.Z);
             }
         }
 
@@ -202,30 +187,18 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
-                {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return false;
-                }
-
-                bool relative = false;
-                ALChecker.Check(() => AL.GetSource(_source, ALSourceb.SourceRelative, out relative));
-
-                return relative;
+                return _relativeListner;
             }
             set
             {
-                if (Handle <= 0)
+                if (_relativeListner != value || _resetting)
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
+                    _relativeListner = value;
+                    if (Handle <= 0)
+                        return;
 
-                    return;
+                    ALChecker.Check(() => AL.Source(Handle, ALSourceb.SourceRelative, value));
                 }
-
-                ALChecker.Check(() => AL.Source(_source, ALSourceb.SourceRelative, value));
             }
         }
 
@@ -236,30 +209,18 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
-                {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return 0f;
-                }
-
-                float distance = 0;
-                ALChecker.Check(() => AL.GetSource(_source, ALSourcef.ReferenceDistance, out distance));
-
-                return distance;
+                return _minDistance;
             }
             set
             {
-                if (Handle <= 0)
+                if (_minDistance != value || _resetting)
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
+                    _minDistance = value;
+                    if (Handle <= 0)
+                        return;
 
-                    return;
+                    ALChecker.Check(() => AL.Source(Handle, ALSourcef.ReferenceDistance, value));
                 }
-
-                ALChecker.Check(() => AL.Source(_source, ALSourcef.ReferenceDistance, value));
             }
         }
 
@@ -270,30 +231,19 @@ namespace Cgen.Audio
         {
             get
             {
-                if (Handle <= 0)
-                {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
-
-                    return 0f;
-                }
-
-                float attenuation = 0f;
-                ALChecker.Check(() => AL.GetSource(_source, ALSourcef.RolloffFactor, out attenuation));
-
-                return attenuation;
+                return _attenuation;
             }
             set
             {
-                if (Handle <= 0)
+                if (_attenuation != value || _resetting)
                 {
-                    Logger.Warning("SoundSource Handle is not created.\n" +
-                        "Play the sound before modifying source properties.");
+                    _attenuation = value;
+                    if (Handle <= 0)
+                        return;
 
-                    return;
+
+                    ALChecker.Check(() => AL.Source(Handle, ALSourcef.RolloffFactor, value));
                 }
-
-                ALChecker.Check(() => AL.Source(_source, ALSourcef.RolloffFactor, value));
             }
         }
 
@@ -304,29 +254,62 @@ namespace Cgen.Audio
         {
         }
 
+        /// <summary>
+        /// Return a value indicating whether the native <see cref="SoundSource.Handle"/> is in valid state.
+        /// </summary>
+        public bool Validate()
+        {
+            return ALChecker.Check(() => AL.IsSource(Handle));
+        }
 
         /// <summary>
         /// Start or resume playing the current <see cref="SoundSource"/> object.
         /// </summary>
-        protected abstract void Play();
+        protected internal abstract void Play();
 
         /// <summary>
         /// Pause the current <see cref="SoundSource"/> object.
         /// </summary>
-        protected abstract void Pause();
+        protected internal abstract void Pause();
 
         /// <summary>
         /// Stop playing the current <see cref="SoundSource"/> object.
         /// </summary>
-        protected abstract void Stop();
+        protected internal abstract void Stop();
+
+        /// <summary>
+        /// When inherited, reset the attached sound buffer(s) from <see cref="SoundSource"/> instance.
+        /// </summary>
+        protected internal abstract void ResetBuffer();
+
+        internal void ResetState()
+        {
+            _resetting = true;
+            { 
+                Volume             = Volume;
+                Position           = Position;
+                Pitch              = Pitch;
+                IsLooping          = IsLooping;
+                Attenuation        = Attenuation;
+                MinDistance        = MinDistance;
+                IsRelativeListener = IsRelativeListener;
+                PlayingOffset      = TimeSpan.Zero;
+            }
+            _resetting = false;
+        }
 
         /// <summary>
         /// Releases all resources used by the <see cref="SoundSource"/>.
         /// </summary>
         public virtual void Dispose()
         {
-            ALChecker.Check(() => AL.Source(_source, ALSourcei.Buffer, 0));
-            ALChecker.Check(() => AL.DeleteSource(_source));
+            if (Validate())
+            {
+                ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
+                ALChecker.Check(() => AL.DeleteSource(Handle));
+
+                SoundSystem.Instance.Enqueue(this, true);
+            }
         }
     }
 }
