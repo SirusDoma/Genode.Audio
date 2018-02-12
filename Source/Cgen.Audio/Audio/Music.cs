@@ -10,9 +10,7 @@ namespace Cgen.Audio
     /// </summary>
     public class Music : SoundStream
     {
-        private readonly object _mutex = new object();
-
-        private SoundReader _reader;
+        private SoundDecoder _decoder;
         private TimeSpan    _duration;
         private int         _sampleCount;
         private SampleInfo  _info;
@@ -34,9 +32,10 @@ namespace Cgen.Audio
         public Music()
             : base()
         {
-            _reader      = null;
+            _decoder      = null;
             _sampleCount = 0;
             _duration    = TimeSpan.Zero;
+
         }
 
         /// <summary>
@@ -68,13 +67,31 @@ namespace Cgen.Audio
         public Music(Stream stream)
             : this()
         {
-            _reader = Decoders.CreateReader(stream);
-            if (_reader == null)
+            _decoder = Decoders.CreateDecoder(stream);
+            if (_decoder != null)
+            {
+                _info = _decoder.Open(stream);
+                Initialize(_info.ChannelCount, _info.SampleRate);
+            }
+            else
             {
                 throw new NotSupportedException("The specified sound is not supported.");
             }
+        }
 
-            _info = _reader.Open(stream);
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Music"/> class
+        /// from existing <see cref="Music"/> class.
+        /// 
+        /// May share same resources as the specified instance.
+        /// </summary>
+        /// <param name="instance"></param>
+        public Music(Music instance)
+            : this()
+        {
+            _decoder = instance._decoder;
+            _info    = instance._info;
+
             Initialize(_info.ChannelCount, _info.SampleRate);
         }
 
@@ -85,18 +102,15 @@ namespace Cgen.Audio
         /// <returns><code>true</code> if reach the end of stream, otherwise false.</returns>
         protected override bool OnGetData(out short[] samples)
         {
-            lock (_mutex)
-            {
-                // Fill the chunk parameters
-                samples    = new short[_sampleCount];
-                long count = _reader.Read(samples, samples.Length);
+            // Fill the chunk parameters
+            samples = new short[_sampleCount];
+            long count = _decoder.Read(samples, samples.Length);
 
-                // Remove the gap when processing last buffer
-                Array.Resize(ref samples, (int)count);
+            // Remove the gap when processing last buffer
+            Array.Resize(ref samples, (int)count);
 
-                // Check if we have reached the end of the audio file
-                return count == _sampleCount;
-            }
+            // Check if we have reached the end of the audio file
+            return count == _sampleCount;
         }
 
         /// <summary>
@@ -105,8 +119,7 @@ namespace Cgen.Audio
         /// <param name="time">Seek to specified time.</param>
         protected override void OnSeek(TimeSpan time)
         {
-            lock (_mutex)
-                _reader.Seek((long)time.TotalSeconds * SampleRate * ChannelCount);
+            _decoder.Seek((long)time.TotalSeconds * SampleRate * ChannelCount);
         }
 
         /// <summary>
@@ -126,12 +139,18 @@ namespace Cgen.Audio
             base.Initialize(channelCount, sampleRate);
         }
 
+        protected internal override void ResetBuffer()
+        {
+            //_decoder?.Dispose();
+            base.ResetBuffer();
+        }
+
         /// <summary>
         /// Releases all resources used by the <see cref="Music"/>.
         /// </summary>
         public override void Dispose()
         {
-            _reader?.Dispose();
+            _decoder?.Dispose();
             base.Dispose();
         }
     }
