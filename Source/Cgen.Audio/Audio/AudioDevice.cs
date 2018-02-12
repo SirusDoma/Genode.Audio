@@ -116,7 +116,7 @@ namespace Cgen.Audio
             ALChecker.Check(() => AL.Listener(ALListenerfv.Orientation, ref orientation));
 
             // Dispose Audio Device when exiting application
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => Free();
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => Dispose();
         }
 
         public static void Initialize()
@@ -154,7 +154,7 @@ namespace Cgen.Audio
             return AL.IsExtensionPresent(extension);
         }
 
-        public static ALFormat GetFormat(int channelCount)
+        internal static ALFormat GetFormat(int channelCount)
         {
             ALFormat format = 0;
             switch (channelCount)
@@ -175,7 +175,12 @@ namespace Cgen.Audio
             return format;
         }
 
-        public static void Free()
+        public static void MakeCurrent()
+        {
+            _context?.MakeCurrent();
+        }
+
+        public static void Dispose()
         {
             if (_context != null)
             {
