@@ -13,7 +13,7 @@ namespace Cgen.Audio
     /// <summary>
     /// Represents a sound that can be played in the audio environment.
     /// </summary>
-    public class Sound : SoundSource, IDisposable
+    public sealed class Sound : SoundSource, IDisposable
     {
         private SoundBuffer _buffer;
 
@@ -29,11 +29,11 @@ namespace Cgen.Audio
             set
             {
                 // First detach from the previous buffer
-                if (_buffer != null)
-                {
+                if (Status != SoundStatus.Initial && Status != SoundStatus.Stopped)
                     Stop();
-                    _buffer.DetachSound(this);
-                }
+
+                // Detach existing buffer
+                _buffer?.DetachSound(this);
 
                 // Assign and use the new buffer
                 _buffer = value;
@@ -92,6 +92,11 @@ namespace Cgen.Audio
             }
         }
 
+        internal Sound(int handle)
+        {
+            Handle = handle;
+        }
+
         /// <summary>
         /// Initializes a new instance of <see cref="Sound"/> class.
         /// </summary>
@@ -112,14 +117,35 @@ namespace Cgen.Audio
         /// <summary>
         /// Start or resume playing the current <see cref="Sound"/> object.
         /// </summary>
-        protected override void Play()
+        protected internal override void Play()
         {
-            if (Handle <= 0)
-            {
-                Logger.Warning("SoundSource Handle is not created.\n" +
-                    "Use SoundSystem.Play() to play a SoundSource.");
+            Preload();
+            ALChecker.Check(() => AL.SourcePlay(Handle));
+        }
 
-                return;
+        /// <summary>
+        /// Pause the current <see cref="Sound"/> object.
+        /// </summary>
+        protected internal override void Pause()
+        {
+            ALChecker.Check(() => AL.SourcePause(Handle));
+        }
+
+        /// <summary>
+        /// Stop playing the current <see cref="Sound"/> object.
+        /// </summary>
+        protected internal override void Stop()
+        {
+            ALChecker.Check(() => AL.SourceStop(Handle));
+        }
+
+        internal void Preload()
+        {
+            // Just to make sure it is not preloaded and it is first time call
+            if (Handle <= 0 || !Validate())
+            {
+                // Get the source from the pool
+                Handle = SoundSystem.Instance.GetSource();
             }
 
             // Attach the sound if it's not attached yet
@@ -127,48 +153,31 @@ namespace Cgen.Audio
             int buffer = 0;
             ALChecker.Check(() => AL.GetSource(Handle, ALGetSourcei.Buffer, out buffer));
 
-            if (!Buffer.IsAttached(this) || Buffer.Handle != buffer)
+            if (Buffer.Handle != buffer || !Buffer.IsAttached(this))
             {
                 // Only attach if its not attached
                 if (!Buffer.IsAttached(this))
                     Buffer.AttachSound(this);
 
-                ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, _buffer.Handle));
+                ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, Buffer.Handle));
             }
 
-            ALChecker.Check(() => AL.SourcePlay(Handle));
         }
 
         /// <summary>
-        /// Pause the current <see cref="Sound"/> object.
+        /// Reset the attached <see cref="SoundBuffer"/> from <see cref="Sound"/> instance.
         /// </summary>
-        protected override void Pause()
+        protected internal override void ResetBuffer()
         {
-            if (Handle <= 0)
+            // First stop the sound in case it is playing
+            if (Handle > 0)
             {
-                Logger.Warning("SoundSource Handle is not created.\n" +
-                    "Use SoundSystem.Pause() to play a SoundSource.");
+                // Detach the buffer
+                ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
 
-                return;
+                Buffer?.DetachSound(this);
+                Buffer = null;
             }
-
-            ALChecker.Check(() => AL.SourcePause(Handle));
-        }
-
-        /// <summary>
-        /// Stop playing the current <see cref="Sound"/> object.
-        /// </summary>
-        protected override void Stop()
-        {
-            if (Handle <= 0)
-            {
-                Logger.Warning("SoundSource Handle is not created.\n" +
-                    "Use SoundSystem.Pause() to play a SoundSource.");
-
-                return;
-            }
-
-            ALChecker.Check(() => AL.SourceStop(Handle));
         }
 
         /// <summary>
@@ -176,24 +185,27 @@ namespace Cgen.Audio
         /// </summary>
         public override void Dispose()
         {
-            Stop();
-            _buffer?.DetachSound(this);
-
             base.Dispose();
-        }
-
-        internal void ResetBuffer()
-        {
-            // First stop the sound in case it is playing
-            Stop();
-
-            // Detach the buffer
-            if (_buffer != null)
+            if (ALChecker.Check(() => AL.IsBuffer((int)Buffer?.Handle)))
             {
-                ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
-                _buffer.DetachSound(this);
-                _buffer = null;
+                ALChecker.Check(() => AL.DeleteBuffer((int)Buffer?.Handle));
             }
+
+            //var sources = SoundSystem.Instance.GetPlayingSources();
+            //for (int i = 0; i < sources.Length;)
+            //{
+            //    var sound = sources[i] as Sound;
+            //    if (sound?.Buffer?.Handle == Buffer?.Handle)
+            //    {
+            //        sound.Stop();
+            //        SoundSystem.Instance.Queue(sound);
+            //        continue;
+            //    }
+
+            //    i++;
+            //}
+
+            //ResetBuffer();
         }
     }
 }
