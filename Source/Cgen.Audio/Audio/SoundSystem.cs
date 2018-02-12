@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using System.Threading;
 
 using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
 
 using Cgen;
 using Cgen.Internal.OpenAL;
-using System.Threading;
 
 namespace Cgen.Audio
 {
@@ -17,8 +17,9 @@ namespace Cgen.Audio
     /// </summary>
     public class SoundSystem : IDisposable
     {
-        private const int MAX_SOURCE_COUNT = 255;
+        private const int MAX_SOURCE_COUNT = 256;
         private static readonly SoundSystem _instance = new SoundSystem();
+        private static readonly object mutex = new object();
         
         /// <summary>
         /// Gets the singleton instance of <see cref="SoundSystem"/>.
@@ -32,29 +33,24 @@ namespace Cgen.Audio
         }
 
         private List<SoundSource> _sources = new List<SoundSource>();
-        private MethodInfo _play, _pause, _stop;
-        private Thread _thread;
-        private bool _isAuto = false;
+        private List<int> _pool = new List<int>();
+        private List<int> _allPools = new List<int>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoundSystem"/> class
         /// with default OpenAL Context.
         /// </summary>
         protected SoundSystem()
+            : this(IntPtr.Zero)
         {
             try
             {
                 // Initialize OpenAL Audio
                 AudioDevice.Initialize();
-
-                _sources = new List<SoundSource>();
-                _play = typeof(SoundSource).GetMethod("Play", BindingFlags.NonPublic | BindingFlags.Instance);
-                _pause = typeof(SoundSource).GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance);
-                _stop = typeof(SoundSource).GetMethod("Stop", BindingFlags.NonPublic | BindingFlags.Instance);
             }
             catch (Exception ex)
             {
-                throw ex.InnerException != null ? ex.InnerException : ex;
+                throw ex.InnerException ?? ex;
             }
         }
 
@@ -65,10 +61,8 @@ namespace Cgen.Audio
         /// <param name="context">Custom OpenAL Context to use.</param>
         protected SoundSystem(IntPtr context)
         {
-            _sources = new List<SoundSource>();
-            _play = typeof(SoundSource).GetMethod("Play", BindingFlags.NonPublic | BindingFlags.Instance);
-            _pause = typeof(SoundSource).GetMethod("Pause", BindingFlags.NonPublic | BindingFlags.Instance);
-            _stop = typeof(SoundSource).GetMethod("Stop", BindingFlags.NonPublic | BindingFlags.Instance);
+            _sources = new List<SoundSource>(MAX_SOURCE_COUNT);
+            _pool    = new List<int>(MAX_SOURCE_COUNT);
         }
 
         /// <summary>
@@ -102,6 +96,49 @@ namespace Cgen.Audio
             // Do nothing, this will trigger the constructor which call AudioDevice.Initialize()
         }
 
+        internal int[] GetPooledSources()
+        {
+            return _allPools.ToArray();
+        }
+
+        internal int GetSource()
+        {
+            int count = _pool.Count;
+            if (count > 0)
+            {
+                // Get sound from the end of available pools
+                int source = _pool[count - 1];
+                _pool.RemoveAt(count - 1);
+
+                return source;
+            }
+
+            return ALChecker.Check(() => AL.GenSource());
+        }
+
+        internal void Queue(SoundSource source)
+        {
+            // Add to available pool queue and remove it from playing sources
+            _pool.Add(source.Handle);
+            _sources.Remove(source);
+
+            // In case it is not registered in all pools, register it
+            if (!_allPools.Contains(source.Handle))
+                _allPools.Add(source.Handle);
+
+            // In case it is still playing, stop it
+            Stop(source);
+        }
+
+        internal void Enqueue(SoundSource source, bool hardEnqueue = false)
+        {
+            // Add to playing sources, or if it is a hard enqueue, remove it from the pool
+            if (hardEnqueue)
+                _allPools.Remove(source.Handle);
+            else
+                _sources.Add(source);
+        }
+
         /// <summary>
         /// Start or resume playing the <see cref="SoundSource"/> object.
         /// </summary>
@@ -121,13 +158,13 @@ namespace Cgen.Audio
             }
 
             // Check whether the number of playing sounds is exceed the limit
-            if (_sources.Count >= MAX_SOURCE_COUNT)
+            if (_allPools.Count + _sources.Count >= MAX_SOURCE_COUNT)
             {
                 // Force to recycle unused source
                 Update();
 
                 // Check again if it exceed the limit
-                if (_sources.Count >= MAX_SOURCE_COUNT)
+                if (_allPools.Count + _sources.Count >= MAX_SOURCE_COUNT)
                 {
                     // It still exceed and throw the exception
                     throw new InvalidOperationException("Failed to play the source:\n" +
@@ -135,29 +172,25 @@ namespace Cgen.Audio
                 }
             }
 
-            // Create the source handle, in case it is first call
-            bool valid = false;
-            ALChecker.Check(() => valid = AL.IsSource(source.Handle));
-            if (!valid)
-            {
-                int handle = 0;
-                ALChecker.Check(() => handle = AL.GenSource());
-                ALChecker.Check(() => AL.Source(handle, ALSourcei.Buffer, 0));
+            // Always get (or create) handle from the pool each time source need to play.
+            source.Handle = GetSource();
 
-                source.Handle = handle;
-            }
+            // Additionally, we need reset source state in case it is retrieved from pool
+            // The handle could be used by different sets of states
+            // Thus resetting state should fix overlapping states problem
+            source.ResetState();
 
-            // Play the sound
             try
             {
-                _play.Invoke(source, null);
+                // Play the sound
+                source.Play();
 
                 // Add to the list
-                _sources.Add(source);
+                Enqueue(source);
             }
             catch (Exception ex)
             {
-                throw ex.InnerException;
+                throw ex.InnerException ?? ex;
             }
         }
 
@@ -197,23 +230,18 @@ namespace Cgen.Audio
                 return;
             }
 
-            // Check whether the specified source has valid handle
-            bool valid = false;
-            ALChecker.Check(() => valid = AL.IsSource(source.Handle));
-
-            // ignore if its not valid
-            if (!valid)
-                return;
-
-            // Pause the sound
-            try
+            // Check whether the specified source has valid handle before pausing
+            if (_sources.Contains(source) && source.Validate())
             {
-
-                _pause.Invoke(source, null);
-            }
-            catch (Exception ex)
-            {
-                throw ex.InnerException;
+                try
+                {
+                    // Pause the source
+                    source.Pause();
+                }
+                catch (Exception ex)
+                {
+                    throw ex.InnerException ?? ex;
+                }
             }
         }
 
@@ -235,38 +263,27 @@ namespace Cgen.Audio
         /// <param name="source">The <see cref="SoundSource"/> to stop.</param>
         public virtual void Stop(SoundSource source)
         {
-            // Nothing to pause
+            // Nothing to stop
             if (source == null)
             {
                 throw new ArgumentNullException("source");
             }
 
-            // Ignore if sources is not listed or handle is not yet created
-            if (!_sources.Contains(source) || source.Handle <= 0)
+            // Check whether the specified source has valid handle before stopping
+            if (_sources.Contains(source) && source.Validate())
             {
-                return;
+                try
+                {
+                    // Stop the source
+                    // Note that we do not enqueue source here
+                    // It is Update() responsibility to take source into the pool
+                    source.Stop();
+                }
+                catch (Exception ex)
+                {
+                    throw ex.InnerException ?? ex;
+                }
             }
-
-            // Check whether the specified source has valid handle
-            bool valid = false;
-            ALChecker.Check(() => valid = AL.IsSource(source.Handle));
-
-            // ignore if its not valid
-            if (!valid)
-                return;
-
-            // Stop the sound
-            try
-            {
-                _stop.Invoke(source, null);
-            }
-            catch (Exception ex)
-            {
-                throw ex.InnerException;
-            }
-
-            // Force to remove the source
-            Update();
         }
 
         /// <summary>
@@ -282,29 +299,6 @@ namespace Cgen.Audio
         }
 
         /// <summary>
-        /// Start Audio Engine with Automatic Update Cycle.
-        /// </summary>
-        public void AutoUpdate()
-        {
-            if (_isAuto || _thread != null)
-            {
-                return;
-            }
-
-            _isAuto = true;
-            _thread = new Thread(() =>
-            {
-                while(_isAuto)
-                {
-                    Update();
-                    Thread.Sleep(10);
-                }
-            });
-
-            _thread.Start();
-        }
-
-        /// <summary>
         /// Update the <see cref="SoundSystem"/>.
         /// </summary>
         public void Update()
@@ -316,55 +310,27 @@ namespace Cgen.Audio
             }
 
             // Remove and dispose unused sources
-            for (int i = _sources.Count -1 ; i >= 0; i--)
+            for (int i = _sources.Count - 1; i >= 0; i--)
             {
                 if (_sources[i] == null)
                 {
                     _sources.RemoveAt(i);
                     continue;
                 }
-
-                // Check whether the specified source has valid handle
-                bool valid = false;
-                ALChecker.Check(() => valid = AL.IsSource(_sources[i].Handle));
-
-                if (!valid || ( _sources[i].Status == SoundStatus.Stopped && !_sources[i].IsLooping))
+                else if (_sources[i] is SoundStream)
                 {
-                    // No need to dispose invalid source handle
-                    if (valid)
-                        _sources[i].Dispose();
-                    _sources.RemoveAt(i);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Stop playing all played <see cref="SoundSource"/> object.
-        /// </summary>
-        public void StopAll()
-        {
-            // Audio Device no longer active?
-            if (AudioDevice.IsDisposed)
-            {
-                throw new ObjectDisposedException("AudioDevice");
-            }
-
-            foreach (var source in _sources)
-            {
-                // Ignore the sound if null, it will be collected upon next Update() call
-                if (source == null)
-                {
-                    continue;
+                    var stream = _sources[i] as SoundStream;
+                    stream?.Update();
                 }
 
-                // Stop the sound
-                try
+                // Check whether the specified source can be restored into source pool
+                if (!_sources[i].Validate() || _sources[i].Status == SoundStatus.Stopped)
                 {
-                    _stop.Invoke(source, null);
-                }
-                catch (Exception ex)
-                {
-                    throw ex.InnerException;
+                    // Reset the buffer to freed memory
+                    _sources[i].ResetBuffer();
+
+                    // Queue the source from the pool and remove from the playing list
+                    Queue(_sources[i]);
                 }
             }
         }
@@ -383,9 +349,16 @@ namespace Cgen.Audio
         /// </summary>
         public virtual void Dispose()
         {
-            _isAuto = false;
-            _thread?.Join();
-            AudioDevice.Free();
+            _sources.Clear();
+            foreach (var source in _allPools)
+            {
+                var sound = new Sound(source);
+
+                Stop(sound);
+                sound.Dispose();
+            }
+
+            AudioDevice.Dispose();
         }
     }
 }
