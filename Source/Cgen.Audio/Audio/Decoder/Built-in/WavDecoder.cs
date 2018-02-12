@@ -6,16 +6,15 @@ using System.Text;
 namespace Cgen.Audio
 {
     /// <summary>
-    /// Represents an implementation of <see cref="SoundReader"/> that handles wav sound format.
+    /// Represents an implementation of <see cref="SoundDecoder"/> that handles wav sound format.
     /// </summary>
-    public sealed class WavReader : SoundReader
+    public sealed class WavDecoder : SoundDecoder
     {
         enum WavFormat
         {
             PCM = 1,
             Float = 3
         }
-
 
         private Stream    _stream;
         private int       _bytesPerSample;
@@ -25,9 +24,9 @@ namespace Cgen.Audio
         private bool      _ownStream;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="WavReader"/> class.
+        /// Initializes a new instance of the <see cref="WavDecoder"/> class.
         /// </summary>
-        public WavReader()
+        public WavDecoder()
         {
             _stream         = null;
             _bytesPerSample = 0;
@@ -125,7 +124,7 @@ namespace Cgen.Audio
         }
 
         /// <summary>
-        /// Check if current <see cref="WavReader"/> object can handle a give data from specified <see cref="Stream"/>.
+        /// Check if current <see cref="WavDecoder"/> object can handle a give data from specified <see cref="Stream"/>.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to check.</param>
         /// <returns><code>true</code> if supported, otherwise false.</returns>
@@ -146,7 +145,7 @@ namespace Cgen.Audio
         /// Open a <see cref="Stream"/> of sound for reading.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to open.</param>
-        /// <param name="ownStream">Specify whether the <see cref="SoundReader"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
+        /// <param name="ownStream">Specify whether the <see cref="SoundDecoder"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
         /// <returns>A <see cref="SampleInfo"/> containing sample information.</returns>
         public override SampleInfo Open(Stream stream, bool ownStream = false)
         {
@@ -232,7 +231,7 @@ namespace Cgen.Audio
         }
 
         /// <summary>
-        /// Release all resources by the <see cref="WavReader"/>.
+        /// Release all resources by the <see cref="WavDecoder"/>.
         /// </summary>
         public override void Dispose()
         {

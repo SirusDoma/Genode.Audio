@@ -8,10 +8,10 @@ namespace Cgen.Audio
     /// <summary>
     /// Represents a decoder to decode specific audio format.
     /// </summary>
-    public abstract class SoundReader : IDisposable
+    public abstract class SoundDecoder : IDisposable
     {
         /// <summary>
-        /// Check if current <see cref="SoundReader"/> object can handle a give data from specified <see cref="Stream"/>.
+        /// Check if current <see cref="SoundDecoder"/> object can handle a give data from specified <see cref="Stream"/>.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to check.</param>
         /// <returns><code>true</code> if supported, otherwise false.</returns>
@@ -21,7 +21,7 @@ namespace Cgen.Audio
         /// Open a <see cref="Stream"/> of sound for reading.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to open.</param>
-        /// <param name="ownStream">Specify whether the <see cref="SoundReader"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
+        /// <param name="ownStream">Specify whether the <see cref="SoundDecoder"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
         /// <returns>A <see cref="SampleInfo"/> containing sample information.</returns>
         public abstract SampleInfo Open(Stream stream, bool ownStream = false);
 
@@ -40,7 +40,7 @@ namespace Cgen.Audio
         public abstract long Read(short[] samples, long count);
 
         /// <summary>
-        /// Release all resources used by the <see cref="SoundReader"/>.
+        /// Release all resources used by the <see cref="SoundDecoder"/>.
         /// </summary>
         public abstract void Dispose();
     }

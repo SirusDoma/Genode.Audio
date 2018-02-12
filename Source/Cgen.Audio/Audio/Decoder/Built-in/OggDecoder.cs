@@ -11,24 +11,24 @@ using System.IO;
 namespace Cgen.Audio
 {
     /// <summary>
-    /// Represents an implementation of <see cref="SoundReader"/> that handles ogg sound format.
+    /// Represents an implementation of <see cref="SoundDecoder"/> that handles ogg sound format.
     /// </summary>
-    public sealed class OggReader : SoundReader
+    public sealed class OggDecoder : SoundDecoder
     {
         private NVorbis.VorbisReader _reader;
         private int                  _channelCount;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OggReader"/> class.
+        /// Initializes a new instance of the <see cref="OggDecoder"/> class.
         /// </summary>
-        public OggReader()
+        public OggDecoder()
         {
             _reader       = null;
             _channelCount = 0;
         }
 
         /// <summary>
-        /// Check if current <see cref="OggReader"/> object can handle a give data from specified <see cref="Stream"/>.
+        /// Check if current <see cref="OggDecoder"/> object can handle a give data from specified <see cref="Stream"/>.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to check.</param>
         /// <returns><code>true</code> if supported, otherwise false.</returns>
@@ -44,7 +44,7 @@ namespace Cgen.Audio
         /// Open a <see cref="Stream"/> of sound for reading.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to open.</param>
-        /// <param name="ownStream">Specify whether the <see cref="SoundReader"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
+        /// <param name="ownStream">Specify whether the <see cref="SoundDecoder"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
         /// <returns>A <see cref="SampleInfo"/> containing sample information.</returns>
         public override SampleInfo Open(Stream stream, bool ownStream = false)
         {
@@ -80,7 +80,7 @@ namespace Cgen.Audio
         }
 
         /// <summary>
-        /// Releases all resources used by the <see cref="OggReader"/>.
+        /// Releases all resources used by the <see cref="OggDecoder"/>.
         /// </summary>
         public override void Dispose()
         {

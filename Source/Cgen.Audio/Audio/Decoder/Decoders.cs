@@ -14,27 +14,27 @@ namespace Cgen.Audio
             _registered = new List<Type>();
 
             // Register Built-in readers
-            Register<WavReader>();
-            Register<OggReader>();
+            Register<WavDecoder>();
+            Register<OggDecoder>();
         }
 
         /// <summary>
-        /// Check whether the specified <see cref="SoundReader"/> is already registered.
+        /// Check whether the specified <see cref="SoundDecoder"/> is already registered.
         /// </summary>
-        /// <typeparam name="T">Type of <see cref="SoundReader"/> to check.</typeparam>
+        /// <typeparam name="T">Type of <see cref="SoundDecoder"/> to check.</typeparam>
         /// <returns><code>true</code> if registered, otherwise false.</returns>
         public static bool IsRegistered<T>()
-            where T : SoundReader, new()
+            where T : SoundDecoder, new()
         {
             return _registered.Contains(typeof(T));
         }
 
         /// <summary>
-        /// Register specified <see cref="SoundReader"/>.
+        /// Register specified <see cref="SoundDecoder"/>.
         /// </summary>
-        /// <typeparam name="T">Type of <see cref="SoundReader"/> to register.</typeparam>
+        /// <typeparam name="T">Type of <see cref="SoundDecoder"/> to register.</typeparam>
         public static void Register<T>()
-            where T : SoundReader, new()
+            where T : SoundDecoder, new()
         {
             if (IsRegistered<T>())
             {
@@ -46,11 +46,11 @@ namespace Cgen.Audio
         }
 
         /// <summary>
-        /// Unregister specified <see cref="SoundReader"/>.
+        /// Unregister specified <see cref="SoundDecoder"/>.
         /// </summary>
-        /// <typeparam name="T">Type of <see cref="SoundReader"/> to unregister.</typeparam>
+        /// <typeparam name="T">Type of <see cref="SoundDecoder"/> to unregister.</typeparam>
         public static void Unregister<T>()
-            where T : SoundReader, new()
+            where T : SoundDecoder, new()
         {
             if (!IsRegistered<T>())
             {
@@ -62,11 +62,11 @@ namespace Cgen.Audio
         }
 
         /// <summary>
-        /// Create a registered instance of <see cref="SoundReader"/> from specified sound <see cref="Stream"/>.
+        /// Create a registered instance of <see cref="SoundDecoder"/> from specified sound <see cref="Stream"/>.
         /// </summary>
         /// <param name="stream"><see cref="Stream"/> that contains sound.</param>
-        /// <returns><see cref="SoundReader"/> that can handle the data, otherwise null.</returns>
-        public static SoundReader CreateReader(Stream stream)
+        /// <returns><see cref="SoundDecoder"/> that can handle the data, otherwise null.</returns>
+        public static SoundDecoder CreateDecoder(Stream stream)
         {
             if (!stream.CanRead || !stream.CanSeek)
             {
@@ -77,7 +77,7 @@ namespace Cgen.Audio
             {
                 stream.Position = 0;
 
-                var reader = (SoundReader)Activator.CreateInstance(type);
+                var reader = (SoundDecoder)Activator.CreateInstance(type);
                 if (reader.Check(stream))
                     return reader;
             }
