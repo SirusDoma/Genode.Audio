@@ -86,7 +86,7 @@ namespace Cgen.Audio
             _duration = TimeSpan.Zero;
 
             // Create the buffer
-            ALChecker.Check(() => _buffer = AL.GenBuffer());
+            _buffer = ALChecker.Check(() => AL.GenBuffer());
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace Cgen.Audio
         public SoundBuffer(Stream stream)
             : this()
         {
-            var reader = Decoders.CreateReader(stream);
+            var reader = Decoders.CreateDecoder(stream);
             if (reader == null)
             {
                 throw new NotSupportedException("The specified sound is not supported.");
@@ -142,7 +142,7 @@ namespace Cgen.Audio
             Update(channelCount, sampleRate);
         }
 
-        private void Initialize(SoundReader reader, SampleInfo info)
+        private void Initialize(SoundDecoder reader, SampleInfo info)
         {
             // Retrieve the sound parameters
             long sampleCount  = info.SampleCount;
@@ -209,6 +209,21 @@ namespace Cgen.Audio
             return _samples;
         }
 
+        internal bool IsAttached(Sound sound)
+        {
+            return _sounds.Contains(sound);
+        }
+
+        internal void AttachSound(Sound sound)
+        {
+            _sounds.Add(sound);
+        }
+
+        internal void DetachSound(Sound sound)
+        {
+            _sounds.Remove(sound);
+        }
+
         /// <summary>
         /// Releases all resources used by <see cref="SoundBuffer"/>.
         /// </summary>
@@ -226,21 +241,6 @@ namespace Cgen.Audio
             // Destroy the buffer
             if (_buffer > 0)
                 ALChecker.Check(() => AL.DeleteBuffer(_buffer));
-        }
-
-        internal bool IsAttached(Sound sound)
-        {
-            return _sounds.Contains(sound);
-        }
-
-        internal void AttachSound(Sound sound)
-        {
-            _sounds.Add(sound);
-        }
-
-        internal void DetachSound(Sound sound)
-        {
-            _sounds.Remove(sound);
         }
     }
 }
