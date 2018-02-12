@@ -16,7 +16,7 @@ namespace Cgen.Internal.OpenAL
     /// </summary>
     public static class ALChecker
     {
-        private static bool _isManuallyChecked = true;
+        private static bool _checked = true;
 
         /// <summary>
         /// Represents Verbose level of <see cref="GLChecker"/>.
@@ -79,7 +79,7 @@ namespace Cgen.Internal.OpenAL
         public static void Check(Action function)
         {
             function();
-            _isManuallyChecked = false;
+            _checked = false;
 
             if (Verbose)
             {
@@ -89,6 +89,26 @@ namespace Cgen.Internal.OpenAL
 #if DEBUG
             CheckError();
 #endif
+        }
+
+        /// <summary>
+        /// Call specific function and check for OpenGL Error.
+        /// </summary>
+        /// <param name="function">Function to call.</param>
+        public static T Check<T>(Func<T> function)
+        {
+            var result = function();
+            _checked = false;
+
+            if (Verbose)
+            {
+                CheckError();
+                return result;
+            }
+#if DEBUG
+            CheckError();
+#endif
+            return result;
         }
 
         /// <summary>
@@ -113,16 +133,12 @@ namespace Cgen.Internal.OpenAL
             {
                 if (VerboseLevel == VerboseFlags.All)
                 {
-                    if (_isManuallyChecked)
-                        Logger.StackFrame = 2;
-                    else
-                        Logger.StackFrame = 3;
-
-                    Logger.Log("NoError: GL Operation Success", Logger.Level.Information);
+                    Logger.StackFrame = _checked ? 2 : 3;
+                    Logger.Log("NoError: AL Operation Success", Logger.Level.Information);
                     Logger.StackFrame = 1;
                 }
 
-                _isManuallyChecked = true;
+                _checked = true;
                 return;
             }
 
@@ -169,22 +185,16 @@ namespace Cgen.Internal.OpenAL
                 default:
                 {
                     error = errorCode.ToString();
+                    description = AL.GetErrorString(errorCode);
                     break;
                 }
             }
 
-            if (_isManuallyChecked)
-            {
-                Logger.StackFrame = 2;
-            }
-            else
-            {
-                Logger.StackFrame = 3;
-            }
-
-            _isManuallyChecked = true;
+            Logger.StackFrame = _checked ? 2 : 3;
             Logger.Log(error + ": " + description, Logger.Level.Error);
             Logger.StackFrame = 1;
+
+            _checked = true;
         }
     }
 }
