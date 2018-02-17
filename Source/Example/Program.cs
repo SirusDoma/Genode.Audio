@@ -14,9 +14,11 @@ namespace Example
             // This is ensure our SoundSystem will be disposed when program about to exit
             using (var system = SoundSystem.Instance)
             {
+                // Hide Console Cursor
+                Console.CursorVisible = false;
+
                 // Now with music
                 var music = new Music("./Resources/orchestral.ogg");
-                //music.IsLooping = true;
                 system.Play(music);
 
                 var length = music.Duration;
@@ -49,8 +51,6 @@ namespace Example
                     );
                 }
 
-
-                Console.CursorVisible = false;
                 Console.WriteLine("\n\nPress any key to exit program.");
                 Console.ReadKey(true);
             }
