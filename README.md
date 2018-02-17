@@ -186,26 +186,40 @@ It also contains some 3D Sounds Settings such as `Position`, `Attenuation` and `
 
 Note that `SoundGroup` uses method instead property to set the audio elements. `SoundGroup` still allow the instance to modify its own audio elements outside from the group, therefore, the `SoundGroup` does not provides a way to detect the audio element since each of them may vary from the other `SoundSource` in the group.
 
-### 7. Cleanup ###
+### 7. Extending Sound ###
 
-It is recommended that you do not disposing `SoundSource` (`Sound` or `Music`) right after it is not used, Disposing `SoundSource` will releasing OpenAL handle, which mean it cannot be reused and recycled by pool system of `SoundSystem`.    
+`SoundStream` can be extended to suit your needs, this allow you to stream data from various source that `Music` cannot comprehend, such as network stream or audio recorder.
 
-Disposing of `SoundSource` will not give you significant benefit both in term of memory usage or cpu utilization. Because the buffer will be enqueued anyway to save memory and keep `SoundSource` state reusable while the OpenAL handle itself only take small amount of bytes.  
+In such cases, you should derive `SoundStream`. Following abstract methods need to be implemented:
 
-However, in case you're about to exit the program or library is no longer needed, it is recommended to perform the cleanup.  
+- `void Initialize(int channelCount, int sampleRate)`
+  You have to call this method. Depending at your implementation, this can be called anywhere (of course before the stream begin), but most of time, it is called right after your source stream / decoder is open and / or read partial information of the source audio data to gather `channelCount` and `sampleRate`.
 
-```
-    // Dispose SoundSystem
-    SoundSystem.Instance.Dispose();
-```
+- `bool OnGetData(out short[] samples)`  
+  You have to override this method. It is responsible to read the samples from the source and will be called when the `SoundStream` is out of buffer to process. You will have to return boolean to indicate whether there is remaining sample to be streamed.
 
-Note this will stop all playing sounds and music instances and dispose them, including the OpenAL that mentioned earlier.  
+- `void OnSeek(TimeSpan time)`
+  You have to override this method. This method will be called when `PlayingOffset` is changed by user, you will have to seek the position of source stream / decoder to the equally same as specified time. Sometimes it is impossible to seek the stream in certain cases, such as voice call. At that case, you can simply return the method and inform the user that seek is not available at current implementation.
 
-Performing any playback operation or modifying audio properties is no longer safe after this point.
+In addition to `SoundStream`, you cannot extend `Sound` class because it is fairly simple object that load `SoundBuffer` into memory. You can inherit `SoundSource` instead make your own Sound class, however you may need provide low level function during the implementation, such as providing buffer data to OpenAL handle manually.  
 
-## Extending SoundSystem ##
+In case you want to cover audio data that not supported or defined within library, then make your own `SoundDecoder` instead by inherit it and register it to `Decoders` class.
 
-It is possible to extend the `SoundSystem` to perform customized code. In case you want to perform OpenAL specific codes, you need to provide your own or use existing OpenAL library. This audio engine uses [OpenTK](https://github.com/opentk/opentk) to perform OpenAL operations, however it is completely up to you to choose OpenAL implementation.  
+### 8. Custom Decoder / Encoder ###
+
+In case the library doesn't provide audio processor that you need, you can always make your own Decoder and Encoder. Encoder and Decoder share same structure unless Decoder `Read()` the samples and Encoder `Write()` the samples instead.  
+
+You'll have to provide following implementations:
+
+- `bool Check(Stream stream)`  
+  You have to override this method and provide implementation to check whether the given `Stream` is accepted by `SoundDecoder` / `SoundEncoder` instance, return `true` if the encoder / decoder able to comprehend the format, otherwise `false`.
+
+- `void Initialize(int channelCount, int sampleRate)`
+  This method is responsible to `Initialize` your decoder / encoder from given `Stream` in the constructor, You don't need to check the `BaseStream` as it was previously checked.
+
+### 9. Extending SoundSystem ###
+
+In addition to `SoundStream`, it also possible to extend the `SoundSystem` to perform customized code. In case you want to perform OpenAL specific codes, you need to provide your own or use existing OpenAL library. This audio engine uses [OpenTK](https://github.com/opentk/opentk) to perform OpenAL operations, however it is completely up to you to choose OpenAL implementation.  
 
 For example, you want to create your own OpenAL `Context` manually by yourself, Cgen.Audio doesn't provides such functionality, but you can implement your own:
 
@@ -270,25 +284,28 @@ In case you dislike lambda, perform error checking by calling `ALCheker.CheckErr
 
 Any error will printed via `Cgen.Logger`. Check and explore `Cgen.Internal.OpenAL.ALChecker` and `Cgen.Logger` for more information.
 
+### 10. Audio Capture ###
 
-## Extending Sound ##
+You can also record audio from your audio input device such as Microphone. use `SoundBufferRecorder` to record audio to `SoundBuffer`, you can also make your own implementation by implement `SoundRecorder` class. Basically, you only want do this when you're didn't intend to save rocorder on `SoundBuffer` and / or prefer to stream it instead, such as VoIP.
 
-In addition to extending `SoundSystem`, `SoundStream` can be extended as well, this allow you to stream data from various source that `Music` cannot comprehend, such as network stream or audio recorder.
+The API quite look the same as playback, but you will need to use `Capture()` instead of `Play()`.
 
-In such cases, you should derive `SoundStream`. Following abstract methods need to be implemented:
+### 11. Cleanup ###
 
-- `void Initialize(int channelCount, int sampleRate)`
-  You have to call this method. Depending at your implementation, this can be called anywhere (of course before the stream begin), but most of time, it is called right after your source stream / decoder is open and / or read partial information of the source audio data to gather `channelCount` and `sampleRate`.
+It is recommended that you do not disposing `SoundSource` (`Sound` or `Music`) right after it is not used, Disposing `SoundSource` will releasing OpenAL handle, which mean it cannot be reused and recycled by pool system of `SoundSystem`.    
 
-- `bool OnGetData(out short[] samples)`  
-  You have to override this method. It is responsible to read the samples from the source and will be called when the `SoundStream` is out of buffer to process. You will have to return boolean to indicate whether there is remaining sample to be streamed.
+Disposing of `SoundSource` will not give you significant benefit both in term of memory usage or cpu utilization. Because the buffer will be enqueued anyway to save memory and keep `SoundSource` state reusable while the OpenAL handle itself only take small amount of bytes.  
 
-- `void OnSeek(TimeSpan time)`
-  You have to override this method. This method will be called when `PlayingOffset` is changed by user, you will have to seek the position of source stream / decoder to the equally same as specified time. Sometimes it is impossible to seek the stream in certain cases, such as voice call. At that case, you can simply return the method and inform the user that seek is not available at current implementation.
+However, in case you're about to exit the program or library is no longer needed, it is recommended to perform the cleanup.  
 
-In addition to `SoundStream`, you cannot extend `Sound` class because it is fairly simple object that load `SoundBuffer` into memory. You can inherit `SoundSource` instead make your own Sound class, however you may need provide low level function during the implementation, such as providing buffer data to OpenAL handle manually.  
+```
+    // Dispose SoundSystem
+    SoundSystem.Instance.Dispose();
+```
 
-In case you want to cover audio data that not supported or defined within library, then make your own `SoundDecoder` instead by inherit it and register it to `Decoders` class.
+Note this will stop all playing sounds and music instances and dispose them, including the OpenAL that mentioned earlier.  
+
+Performing any playback operation or modifying audio properties is no longer safe after this point.
 
 ## Dependencies ##
 
@@ -305,14 +322,21 @@ List of dependencies:
 
 ## Version History ##
 
+### v2.0
+This release contains minor breaking changes  
+- Reworked Sound Decoder
+- Added Sound Encoder
+- Added Sound Recorder
+- Minor bugfix
+- Added some options and features to AudioDevice
+
 ### v1.5
+This release contains minor breaking changes  
 - Reworked `SoundSystem` `SoundSource` pooling
 - Reworked `SoundSource` audio states
 - Removed threading mechanic from `Music` and `SoundSystem`
 - Renamed `SoundReader` to `SoundDecoder`
 - Updated small amounts of OpenAL functions and states
-
-TODO: Rework `SoundGroup` to adapt dynamic states that caused by source pooling.
 
 ### v1.0
 - Complete Rewrite of the API
