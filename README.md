@@ -14,7 +14,7 @@ The main idea is to provide an audio playback that simple and fast. If you prefe
 
 ### .NET Standard Branch ###
 
-This branch has been modified to become .NET Standard library which can be consumed in .NET Core application. The included example also has been re-written into .NET Core 2.0. There is also OGG Encoder included for this branch.  
+This branch has been modified to become .NET Standard library that can be consumed in .NET Core application. The included example also has been re-written into .NET Core 2.0. There is also OGG Encoder included for this branch.  
 
 Checkout *Compiling Project* section for further details.  
 
@@ -309,7 +309,7 @@ However, in case you're about to exit the program or library is no longer needed
     SoundSystem.Instance.Dispose();
 ```
 
-Note this will stop all playing sounds and music instances and dispose them, including the OpenAL that mentioned earlier.  
+Note this will stop all playing sounds and music instances and dispose them, including the OpenAL handle that mentioned earlier.  
 
 Performing any playback operation or modifying audio properties is no longer safe after this point.
 
