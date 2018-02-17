@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cgen.Audio", "Cgen.Audio\Cgen.Audio.csproj", "{8C316A4E-1ED9-4538-8561-E0F325A32F94}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cgen.Audio", "Source\Cgen.Audio\Cgen.Audio.csproj", "{8C316A4E-1ED9-4538-8561-E0F325A32F94}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{B6308C8D-4568-4214-913B-B70942C0095E}"
 	ProjectSection(SolutionItems) = preProject
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Example\Example.csproj", "{54D2A85E-8635-474D-801F-A59030B513FD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Source\Example\Example.csproj", "{54D2A85E-8635-474D-801F-A59030B513FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
