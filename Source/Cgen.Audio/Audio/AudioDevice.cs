@@ -18,6 +18,14 @@ namespace Cgen.Audio
         private static Vector3 _listenerDirection;
         private static Vector3 _listenerUpVector;
 
+        internal static AudioContext Context
+        {
+            get
+            {
+                return AudioContext.CurrentContext;
+            }
+        }
+
         public static bool IsDisposed
         {
             get;
@@ -90,14 +98,37 @@ namespace Cgen.Audio
             }
         }
 
+        public static string[] PlaybackDevices
+        {
+            get
+            {
+                var devices = new List<string>();
+                foreach (string device in AudioContext.AvailableDevices)
+                    devices.Add(device);
+
+                return devices.ToArray();
+            }
+        }
+
         static AudioDevice()
         {
             // Create audio context (which create the ALCdevice and ALCcontext)
             _context = new AudioContext();
-            _context.MakeCurrent();
+            
+            // Reset state of audio context
+            ResetState();
+
+            // Dispose Audio Device when exiting application
+            AppDomain.CurrentDomain.ProcessExit += (s, e) => Dispose();
+        }
+
+        private static void ResetState()
+        {
+            // Make sure we use current context in the current thread
+            MakeCurrent();
 
             // Configure default state of listener
-            _listenerVolume = 100f;
+            _listenerVolume    = 100f;
             _listenerPosition  = new Vector3(0f, 0f,  0f);
             _listenerDirection = new Vector3(0f, 0f, -1f);
             _listenerUpVector  = new Vector3(0f, 1f,  0f);
@@ -114,9 +145,6 @@ namespace Cgen.Audio
             ALChecker.Check(() => AL.Listener(ALListenerf.Gain, _listenerVolume * 0.01f));
             ALChecker.Check(() => AL.Listener(ALListener3f.Position, _listenerPosition.X, _listenerPosition.Y, _listenerPosition.Z));
             ALChecker.Check(() => AL.Listener(ALListenerfv.Orientation, ref orientation));
-
-            // Dispose Audio Device when exiting application
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => Dispose();
         }
 
         public static void Initialize()
@@ -127,26 +155,32 @@ namespace Cgen.Audio
             // In other words, this is only convinent class to trigger initialization
         }
 
+        public static void Initialize(string device)
+        {
+            // Initializes context with specified playback device
+            _context?.Dispose();
+            _context = new AudioContext(device);
+
+            // Reset state of audio context
+            ResetState();
+        }
+
         public static void Initialize(IntPtr handle)
         {
             // The user provide their own OpenAL Context
             // Therefore, this context should not be used
-            if (_context != null)
-            {
-                _context.Dispose();
-            }
+            _context?.Dispose();
         }
 
         public static void Initialize(AudioContext context)
         {
             // The user provide their own OpenAL Context
             // Therefore, this context should not be used
-            if (_context != null)
-            {
-                _context.Dispose();
-            }
-
+            _context?.Dispose();
             _context = context;
+
+            // Reset state of audio context
+            ResetState();
         }
 
         public static bool IsExtensionSupported(string extension)
