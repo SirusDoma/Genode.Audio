@@ -21,10 +21,9 @@ namespace Cgen.Audio
         /// <summary>
         /// Initializes a new instance of the <see cref="OggDecoder"/> class.
         /// </summary>
-        public OggDecoder()
+        public OggDecoder(Stream stream, bool ownStream = false)
+            : base(stream, ownStream)
         {
-            _reader       = null;
-            _channelCount = 0;
         }
 
         /// <summary>
@@ -37,18 +36,17 @@ namespace Cgen.Audio
             byte[] header = new byte[4];
             stream.Read(header, 0, 4);
 
+            stream.Seek(0, SeekOrigin.Begin);
             return Encoding.UTF8.GetString(header) == "OggS";
         }
 
         /// <summary>
         /// Open a <see cref="Stream"/> of sound for reading.
         /// </summary>
-        /// <param name="stream">The <see cref="Stream"/> to open.</param>
-        /// <param name="ownStream">Specify whether the <see cref="SoundDecoder"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
         /// <returns>A <see cref="SampleInfo"/> containing sample information.</returns>
-        public override SampleInfo Open(Stream stream, bool ownStream = false)
+        protected override SampleInfo Initialize()
         {
-            _reader = new NVorbis.VorbisReader(stream, ownStream);
+            _reader = new NVorbis.VorbisReader(BaseStream, OwnStream);
             _channelCount = _reader.Channels;
 
             return new SampleInfo((int)(_reader.TotalSamples * _reader.Channels), 
@@ -79,13 +77,7 @@ namespace Cgen.Audio
             return read;
         }
 
-        /// <summary>
-        /// Releases all resources used by the <see cref="OggDecoder"/>.
-        /// </summary>
-        public override void Dispose()
-        {
-            _reader.Dispose();
-        }
+        
 
         private static void CastBuffer(float[] inBuffer, short[] outBuffer, int length)
         {
@@ -99,6 +91,14 @@ namespace Cgen.Audio
 
                 outBuffer[i] = (short)temp;
             }
+        }
+
+        /// <summary>
+        /// Releases all resources used by the <see cref="OggDecoder"/>.
+        /// </summary>
+        public override void Dispose()
+        {
+            _reader.Dispose();
         }
     }
 }

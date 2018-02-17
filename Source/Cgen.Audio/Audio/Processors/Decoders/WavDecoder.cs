@@ -10,50 +10,37 @@ namespace Cgen.Audio
     /// </summary>
     public sealed class WavDecoder : SoundDecoder
     {
-        enum WavFormat
-        {
-            PCM = 1,
-            Float = 3
-        }
-
-        private Stream    _stream;
         private int       _bytesPerSample;
         private long      _offsetStart;
         private long      _offsetEnd;
         private WavFormat _format;
-        private bool      _ownStream;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="WavDecoder"/> class.
         /// </summary>
-        public WavDecoder()
+        public WavDecoder(Stream stream, bool ownStream = false)
+            : base(stream, ownStream)
         {
-            _stream         = null;
-            _bytesPerSample = 0;
-            _offsetStart    = 0;
-            _offsetEnd      = 0;
-            _format         = WavFormat.PCM;
-            _ownStream      = false;
         }
 
         private SampleInfo ParseHeader()
         {
             // If we are here, it means that the first part of the header
             // (the format) has already been checked
-            _stream.Seek(12, SeekOrigin.Begin);
+            BaseStream.Seek(12, SeekOrigin.Begin);
 
-            int sampleCount = 0;
+            int sampleCount    = 0;
             short channelCount = 0;
-            int sampleRate = 0;
+            int sampleRate     = 0;
 
             // Parse all the sub-chunks
             bool dataChunkFound = false;
-            var reader = new BinaryReader(_stream);
+            var reader = new BinaryReader(BaseStream);
             while (!dataChunkFound)
             {
                 // Parse the sub-chunk id and size
                 byte[] subChunkId = new byte[4];
-                if (_stream.Read(subChunkId, 0, 4) != 4)
+                if (BaseStream.Read(subChunkId, 0, 4) != 4)
                     throw new Exception("Failed to open WAV sound file (invalid or unsupported file)");
                 int subChunkSize = reader.ReadInt32();
 
@@ -87,15 +74,15 @@ namespace Cgen.Audio
                     if (bitsPerSample != 8 && bitsPerSample != 16 && bitsPerSample != 24 && bitsPerSample != 32)
                     {
                         throw new FormatException(
-                                    "Unsupported sample size: " + bitsPerSample.ToString() + " bit (Supported sample sizes are 8/16/24/32 bit)"
-                                  );
+                            "Unsupported sample size: " + bitsPerSample.ToString() + " bit (Supported sample sizes are 8/16/24/32 bit)"
+                        );
                     }
                     _bytesPerSample = bitsPerSample / 8;
 
                     // Skip potential extra information (should not exist for PCM)
                     if (subChunkSize > 16)
                     {
-                        if (_stream.Seek(subChunkSize - 16, SeekOrigin.Current) == -1)
+                        if (BaseStream.Seek(subChunkSize - 16, SeekOrigin.Current) == -1)
                             throw new Exception("Failed to open WAV sound file (invalid or unsupported file)");
                     }
                 }
@@ -107,7 +94,7 @@ namespace Cgen.Audio
                     sampleCount = subChunkSize / _bytesPerSample;
 
                     // Store the start and end position of samples in the file
-                    _offsetStart = _stream.Position;
+                    _offsetStart = BaseStream.Position;
                     _offsetEnd = _offsetStart + sampleCount * _bytesPerSample;
 
                     dataChunkFound = true;
@@ -115,7 +102,7 @@ namespace Cgen.Audio
                 else
                 {
                     // unknown chunk, skip it
-                    if (_stream.Seek(subChunkSize, SeekOrigin.Current) == -1)
+                    if (BaseStream.Seek(subChunkSize, SeekOrigin.Current) == -1)
                         throw new Exception("Failed to open WAV sound file (invalid or unsupported file)");
                 }
             }
@@ -133,9 +120,7 @@ namespace Cgen.Audio
             int size = 12;
             byte[] header = new byte[size];
             if (stream.Read(header, 0, size) < size)
-            {
                 return false;
-            }
 
             return Encoding.UTF8.GetString(header, 0, 4) == "RIFF" &&
                    Encoding.UTF8.GetString(header, 8, 4) == "WAVE";
@@ -147,10 +132,8 @@ namespace Cgen.Audio
         /// <param name="stream">The <see cref="Stream"/> to open.</param>
         /// <param name="ownStream">Specify whether the <see cref="SoundDecoder"/> should close the source <see cref="Stream"/> upon disposing the reader.</param>
         /// <returns>A <see cref="SampleInfo"/> containing sample information.</returns>
-        public override SampleInfo Open(Stream stream, bool ownStream = false)
+        protected override SampleInfo Initialize()
         {
-            _stream    = stream;
-            _ownStream = ownStream;
             return ParseHeader();
         }
 
@@ -160,7 +143,7 @@ namespace Cgen.Audio
         /// <param name="sampleOffset">The index of the sample to jump to, relative to the beginning.</param>
         public override void Seek(long sampleOffset)
         {
-            _stream.Seek(_offsetStart + sampleOffset * _bytesPerSample, SeekOrigin.Begin);
+            BaseStream.Seek(_offsetStart + sampleOffset * _bytesPerSample, SeekOrigin.Begin);
         }
 
         /// <summary>
@@ -175,8 +158,8 @@ namespace Cgen.Audio
             int index = 0;
             try
             {
-                var reader = new BinaryReader(_stream);
-                while ((read < count) && (_stream.Position < _offsetEnd))
+                var reader = new BinaryReader(BaseStream);
+                while ((read < count) && (BaseStream.Position < _offsetEnd))
                 {
                     switch (_bytesPerSample)
                     {
@@ -228,15 +211,6 @@ namespace Cgen.Audio
 
             
             return read;
-        }
-
-        /// <summary>
-        /// Release all resources by the <see cref="WavDecoder"/>.
-        /// </summary>
-        public override void Dispose()
-        {
-            if (_ownStream)
-                _stream?.Dispose();
         }
     }
 }
