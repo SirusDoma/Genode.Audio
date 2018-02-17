@@ -7,12 +7,10 @@ using OpenTK;
 using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
 
-using Cgen;
-
 namespace Cgen.Internal.OpenAL
 {
     /// <summary>
-    /// Provides OpenGL checking functions.
+    /// Provides OpenAL checking functions.
     /// </summary>
     public static class ALChecker
     {
@@ -38,8 +36,8 @@ namespace Cgen.Internal.OpenAL
         }
 
         /// <summary>
-        /// Gets the last OpenGL Error that occurred.
-        /// Any OpenGL call should be called through <see cref="ALChecker.Check(Action)"/> to make this property working properly.
+        /// Gets the last OpenAL Error that occurred.
+        /// Any OpenAL call should be called through <see cref="ALChecker.Check(Action)"/> to make this property working properly.
         /// </summary>
         internal static ALError LastError
         {
@@ -73,7 +71,7 @@ namespace Cgen.Internal.OpenAL
         }
 
         /// <summary>
-        /// Call specific function and check for OpenGL Error.
+        /// Call specific function and check for OpenAL Error.
         /// </summary>
         /// <param name="function">Function to call.</param>
         public static void Check(Action function)
@@ -92,7 +90,7 @@ namespace Cgen.Internal.OpenAL
         }
 
         /// <summary>
-        /// Call specific function and check for OpenGL Error.
+        /// Call specific function and check for OpenAL Error.
         /// </summary>
         /// <param name="function">Function to call.</param>
         public static T Check<T>(Func<T> function)
@@ -112,9 +110,9 @@ namespace Cgen.Internal.OpenAL
         }
 
         /// <summary>
-        /// Gets for the latest OpenGL Error.
+        /// Gets for the latest OpenAL Error.
         /// </summary>
-        /// <returns>Latest OpenGL Error.</returns>
+        /// <returns>Latest OpenAL Error.</returns>
         internal static ALError GetError()
         {
             ALError errorCode = AL.GetError();
@@ -124,7 +122,7 @@ namespace Cgen.Internal.OpenAL
         }
 
         /// <summary>
-        /// Check for the OpenGL Error.
+        /// Check for the OpenAL Error.
         /// </summary>
         public static void CheckError()
         {
