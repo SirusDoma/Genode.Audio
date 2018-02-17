@@ -118,13 +118,13 @@ namespace Cgen.Audio
         public SoundBuffer(Stream stream)
             : this()
         {
-            var reader = Decoders.CreateDecoder(stream);
+            var reader = SoundProcessorFactory.CreateDecoder(stream);
             if (reader == null)
             {
                 throw new NotSupportedException("The specified sound is not supported.");
             }
 
-            var info = reader.Open(stream);
+            var info = reader.SampleInfo; //reader.Open(stream);
             Initialize(reader, info);
         }
 
@@ -175,11 +175,8 @@ namespace Cgen.Audio
 
             // Find the best format according to the number of channels
             var format = AudioDevice.GetFormat(channelCount);
-
             if (format == 0)
-            {
                 throw new Exception("Failed to load sound buffer (unsupported number of channels: " + channelCount.ToString() + ")");
-            }
 
             // First make a copy of the list of sounds so we can reattach later
             var sounds = new List<Sound>(_sounds);
@@ -207,6 +204,34 @@ namespace Cgen.Audio
         public short[] GetSamples()
         {
             return _samples;
+        }
+
+        /// <summary>
+        /// Encode sample with specified <see cref="WavEncoder"/> that resulting array of bytes sound file.
+        /// </summary>
+        /// <returns>An array of bytes containing wav encoded sound file.</returns>
+        public byte[] Save()
+        {
+            return Save<WavEncoder>();
+        }
+
+        /// <summary>
+        /// Encode sample with specified <see cref="SoundEncoder"/> that resulting array of bytes sound file.
+        /// </summary>
+        /// <typeparam name="T"><see cref="SoundEncoder"/> to use.</typeparam>
+        /// <returns>An array of bytes containing encoded sound file.</returns>
+        public byte[] Save<T>()
+            where T : SoundEncoder
+        {
+            using (var stream = new MemoryStream())
+            {
+                using (var encoder = SoundProcessorFactory.CreateEncoder<T>(stream, SampleRate, ChannelCount, true))
+                {
+                    encoder.Write(_samples, _samples.Length);
+                }
+
+                return stream.ToArray();
+            }
         }
 
         internal bool IsAttached(Sound sound)
