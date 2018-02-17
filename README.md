@@ -12,7 +12,7 @@ Written under C# language based on OpenAL (with [OpenTK](https://github.com/open
 
 The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.  
 
-If you're looking for .NET Standard library that can be consumed in .NET Core application, head over to [.net-standard](https://github.com/SirusDoma/Cgen.Audio/tree/net-standard) branch! It also contain OGG Encoder which is not supported in this version of library.  
+If you're looking for .NET Standard version that can be consumed in .NET Core application, head over to [.net-standard](https://github.com/SirusDoma/Cgen.Audio/tree/net-standard) branch! It also contain OGG Encoder which is not supported in this version of library.  
 
 If you really need OGG Encoder in .NET 2.0 version, then port [this](https://github.com/SteveLillis/.NET-Ogg-Vorbis-Encoder) encoder and make a pull request.
 
