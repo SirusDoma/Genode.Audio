@@ -1,119 +1,89 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <BaseIntermediateOutputPath>..\..\Temp\</BaseIntermediateOutputPath>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{8C316A4E-1ED9-4538-8561-E0F325A32F94}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Cgen.Audio</RootNamespace>
-    <AssemblyName>Cgen.Audio</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <IntermediateOutputPath>..\..\Temp</IntermediateOutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutputPath>..\..\Build\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>..\..\Build\Debug\Cgen.Audio.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\..\Build\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>..\..\Build\Release\Cgen.Audio.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <OutputPath>..\..\Build\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>..\..\Build\Debug\Cgen.Audio.xml</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutputPath>..\..\Build\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <DocumentationFile>..\..\Build\Release\Cgen.Audio.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <OutputPath>..\..\Build\Release\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="OpenTK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
-      <HintPath>..\..\Dependencies\Packages\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Compile Remove="Dependencies\NVorbis\OpenTKSupport\**" />
+    <Compile Remove="Dependencies\NVorbis\TestApp\**" />
+    <Compile Remove="Dependencies\NVorbis\TestFiles\**" />
+    <Compile Remove="Dependencies\NVorbis\TestHarness\**" />
+    <Compile Remove="Dependencies\NVorbis\UnitTests\**" />
+    <Compile Remove="Dependencies\VorbisEncoder\Encode Example\**" />
+    <Compile Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
+    <Compile Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\OpenTKSupport\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\TestApp\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\TestFiles\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\TestHarness\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\UnitTests\**" />
+    <EmbeddedResource Remove="Dependencies\VorbisEncoder\Encode Example\**" />
+    <EmbeddedResource Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
+    <EmbeddedResource Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+    <None Remove="Dependencies\NVorbis\OpenTKSupport\**" />
+    <None Remove="Dependencies\NVorbis\TestApp\**" />
+    <None Remove="Dependencies\NVorbis\TestFiles\**" />
+    <None Remove="Dependencies\NVorbis\TestHarness\**" />
+    <None Remove="Dependencies\NVorbis\UnitTests\**" />
+    <None Remove="Dependencies\VorbisEncoder\Encode Example\**" />
+    <None Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
+    <None Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Audio\AudioDevice.cs" />
-    <Compile Include="Audio\Listener.cs" />
-    <Compile Include="Audio\Processors\Decoders\OggDecoder.cs" />
-    <Compile Include="Audio\Processors\Decoders\WavDecoder.cs" />
-    <Compile Include="Audio\Processors\Encoders\WavEncoder.cs" />
-    <Compile Include="Audio\Processors\SoundDecoder.cs" />
-    <Compile Include="Audio\Processors\SoundEncoder.cs" />
-    <Compile Include="Audio\Processors\SoundProcessorFactory.cs" />
-    <Compile Include="Audio\Processors\WavFormat.cs" />
-    <Compile Include="Audio\Recorder\SoundBufferRecorder.cs" />
-    <Compile Include="Audio\Recorder\SoundRecorder.cs" />
-    <Compile Include="Audio\Sound.cs" />
-    <Compile Include="Audio\SoundBuffer.cs" />
-    <Compile Include="Audio\SoundGroup.cs" />
-    <Compile Include="Audio\SoundSystem.cs" />
-    <Compile Include="Audio\Source\SoundSource.cs" />
-    <Compile Include="Audio\Source\SourceStatus.cs" />
-    <Compile Include="Audio\Stream\Music.cs" />
-    <Compile Include="Audio\Stream\SampleInfo.cs" />
-    <Compile Include="Audio\Stream\SoundStream.cs" />
-    <Compile Include="Internal\AL\ALChecker.cs" />
-    <Compile Include="Internal\AL\CaptureChecker.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Systems\Action.cs" />
-    <Compile Include="Internal\Logger.cs" />
-    <Compile Include="Systems\Vectors\Vector2.cs" />
-    <Compile Include="Systems\Vectors\Vector3.cs" />
-    <Compile Include="Systems\Vectors\Vector4.cs" />
-    <!-- NVorbis Dependencies -->
-    <Compile Include="Dependencies\NVorbis\NVorbis\**\*.cs">
-      <InProject>false</InProject>
-    </Compile>
+    <None Remove="Dependencies\NVorbis\.git" />
+    <None Remove="Dependencies\NVorbis\.gitignore" />
+    <None Remove="Dependencies\NVorbis\LICENSE" />
+    <None Remove="Dependencies\NVorbis\Makefile" />
+    <None Remove="Dependencies\NVorbis\NVorbis.nuspec" />
+    <None Remove="Dependencies\NVorbis\NVorbis.OpenTKSupport.nuspec" />
+    <None Remove="Dependencies\NVorbis\NVorbis\Makefile" />
+    <None Remove="Dependencies\NVorbis\publish.cmd" />
+    <None Remove="Dependencies\NVorbis\README" />
+    <None Remove="Dependencies\NVorbis\README.md" />
+    <None Remove="Dependencies\NVorbis\TODO" />
+    <None Remove="Dependencies\VorbisEncoder\.git" />
+    <None Remove="Dependencies\VorbisEncoder\.gitattributes" />
+    <None Remove="Dependencies\VorbisEncoder\.gitignore" />
+    <None Remove="Dependencies\VorbisEncoder\LICENSE" />
+    <None Remove="Dependencies\VorbisEncoder\README.md" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="OpenTK.dll.config" />
-    <None Include="packages.config" />
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2749.6433" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  <ItemGroup>
+    <Folder Include="Dependencies\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="OpenTK.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
