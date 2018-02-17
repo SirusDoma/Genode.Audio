@@ -12,6 +12,7 @@ namespace Cgen.Audio
 {
     /// <summary>
     /// Represents an object with sound properties.
+    /// This class should be used for internal only and / or low-level cases that require OpenAL context.
     /// </summary>
     public abstract class SoundSource : IDisposable
     {
