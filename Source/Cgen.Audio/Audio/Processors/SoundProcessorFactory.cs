@@ -20,6 +20,7 @@ namespace Cgen.Audio
             // Register Built-in writers
             _encoders = new Dictionary<Type, Func<Stream, int, int, bool, SoundEncoder>>();
             InstallEncoder<WavEncoder>((stream, sampleRate, channelCount, own) => new WavEncoder(stream, sampleRate, channelCount, own));
+            InstallEncoder<OggEncoder>((stream, sampleRate, channelCount, own) => new OggEncoder(stream, sampleRate, channelCount, own));
         }
 
         /// <summary>
