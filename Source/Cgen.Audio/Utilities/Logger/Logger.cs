@@ -6,47 +6,8 @@ using System.IO;
 
 namespace Cgen
 {
-    public static class Logger
+    public static partial class Logger
     {
-        public abstract class Listener : IDisposable
-        {
-            protected internal TraceListener _listener;
-
-            public void Dispose()
-            {
-                _listener?.Dispose();
-            }
-        }
-
-        public sealed class LogWriterListener : Listener
-        {
-            public LogWriterListener(string name, string fileName)
-                : base()
-            {
-                _listener = new TextWriterTraceListener(fileName, name);
-            }
-
-            public LogWriterListener(string name, Stream stream)
-                : base()
-            {
-                _listener = new TextWriterTraceListener(stream, name);
-            }
-        }
-
-        public sealed class ConsoleListener : Listener
-        {
-            public ConsoleListener()
-                : this(false)
-            {
-            }
-
-            public ConsoleListener(bool useErrorStream)
-                : base()
-            {
-                _listener = new ConsoleTraceListener(useErrorStream);
-            }
-        }
-
         public enum Level
         {
             None = 0,
@@ -55,38 +16,19 @@ namespace Cgen
             Error = 3
         }
 
-        private static bool isInitialized = false;
-        private static bool _useStackTrace = true;
-        private static bool _useTimestamp = true;
-
         public static bool UseStackTrace
         {
-            get
-            {
-                return _useStackTrace;
-            }
-            set
-            {
-                _useStackTrace = value;
-            }
+            get; set;
         }
 
         public static bool UseTimeStamp
         {
-            get
-            {
-                return _useTimestamp;
-            }
-            set
-            {
-                _useTimestamp = value;
-            }
+            get; set;
         }
 
         public static int StackFrame
         {
-            get;
-            set;
+            get; set;
         }
 
         static Logger()
@@ -97,7 +39,7 @@ namespace Cgen
         public static void AddListener(Listener listener)
         {
 #if DEBUG
-            Debug.Listeners.Add(listener._listener);
+            //Debug.Listeners.Add(listener._listener);
 #else
             Trace.Listeners.Add(listener._listener);
 #endif
@@ -106,7 +48,7 @@ namespace Cgen
         public static void RemoveListener(Listener listener)
         {
 #if DEBUG
-            Debug.Listeners.Remove(listener._listener);
+            //Debug.Listeners.Remove(listener._listener);
 #else
             Trace.Listeners.Remove(listener._listener);
 #endif
@@ -115,7 +57,7 @@ namespace Cgen
         public static void RemoveListener(string name)
         {
 #if DEBUG
-            Debug.Listeners.Remove(name);
+            //Debug.Listeners.Remove(name);
 #else
             Trace.Listeners.Remove(name);
 #endif
@@ -125,6 +67,9 @@ namespace Cgen
         {
             try
             {
+                StackFrame    = 1;
+                UseStackTrace = true;
+                UseTimeStamp  = true;
 #if DEBUG
                 Debug.AutoFlush = true;
 #else
@@ -133,14 +78,14 @@ namespace Cgen
             }
             catch (Exception ex)
             {
-                Error(ex);
+                if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                {
+                    Error(ex);
+                }
             }
             finally
             {
                 AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
-
-                StackFrame = 1;
-                isInitialized = true;
             }
         }
 
@@ -186,76 +131,74 @@ namespace Cgen
 
         private static void Log(string message, Level level, int stackFrameIndex)
         {
-            if (!isInitialized)
+            foreach (var msg in message.Split('\n'))
             {
-                Initialize();
-            }
+                string header = "";
 
-            string header = "";
-
-            if (UseTimeStamp)
-            {
-                string timestamp = string.Format("[{0}]", DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"));
-                header = timestamp;
-            }
-            
-            string levelString = string.Empty;
-            switch (level)
-            {
-                case Level.Information: levelString = "Information"; break;
-                case Level.Warning:     levelString = "  Warning  "; break;
-                case Level.Error:       levelString = "   Error   "; break;
-                default: break;
-            }
-
-            if (!string.IsNullOrEmpty(levelString))
-            {
-                header = string.Format("{0} [{1}]", header, levelString);
-            }
-
-            if (UseStackTrace || level == Level.Warning || level == Level.Error)
-            {
-                string traceInfo = "";
-                var stackTrace = new StackTrace(true);
-                var stackFrame = stackTrace.GetFrame(stackFrameIndex);
-                var method = stackFrame.GetMethod();
-
-                if (method.Name == ".ctor")
+                if (UseTimeStamp)
                 {
-                    traceInfo = string.Format("{0}()", method.DeclaringType.Name);
+                    string timestamp = string.Format("[{0}] ", DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"));
+                    header = timestamp;
                 }
-                else
-                {
-                    string name = method.Name;
-                    if (name.StartsWith("get_") || name.StartsWith("set_") || name.StartsWith("add_") || name.StartsWith("remove_"))
-                    {
-                        if (name.StartsWith("remove_"))
-                        {
-                            name = name.Remove(0, 7);
-                        }
-                        else
-                        {
-                            name = name.Remove(0, 4);
-                        }
 
-                        traceInfo = string.Format("{0}::{1}", method.DeclaringType.Name, name);
+                string levelString = string.Empty;
+                switch (level)
+                {
+                    case Level.Information: levelString = "Information"; break;
+                    case Level.Warning    : levelString = "  Warning  "; break;
+                    case Level.Error      : levelString = "   Error   "; break;
+                    default: break;
+                }
+
+                if (!string.IsNullOrEmpty(levelString))
+                {
+                    header = string.Format("{0}[{1}]", header, levelString);
+                }
+
+                if (UseStackTrace || level == Level.Warning || level == Level.Error)
+                {
+                    string traceInfo = "";
+                    var stackTrace = new StackTrace(true);
+                    var stackFrame = stackTrace.GetFrame(stackFrameIndex);
+                    var method = stackFrame.GetMethod();
+
+                    if (method.Name == ".ctor")
+                    {
+                        traceInfo = string.Format("{0}()", method.DeclaringType.Name);
                     }
                     else
                     {
-                        traceInfo = string.Format("{0}::{1}()", method.DeclaringType.Name, name);
+                        string name = method.Name;
+                        if (name.StartsWith("get_") || name.StartsWith("set_") || name.StartsWith("add_") || name.StartsWith("remove_"))
+                        {
+                            if (name.StartsWith("remove_"))
+                            {
+                                name = name.Remove(0, 7);
+                            }
+                            else
+                            {
+                                name = name.Remove(0, 4);
+                            }
+
+                            traceInfo = string.Format("{0}::{1}", method.DeclaringType.Name, name);
+                        }
+                        else
+                        {
+                            traceInfo = string.Format("{0}::{1}()", method.DeclaringType.Name, name);
+                        }
                     }
+
+                    traceInfo = string.Format("[Ln.{0}] {1}", stackFrame.GetFileLineNumber().ToString("000"), traceInfo);
+                    header = string.Format("{0} {1} -", header, traceInfo);
                 }
 
-                traceInfo = string.Format("[Ln.{0}] {1}", stackFrame.GetFileLineNumber().ToString("000"), traceInfo);
-                header = string.Format("{0} {1} -", header, traceInfo);
-            }
-
-            message = string.Format("{0} {1}", header, message);
+                var log = string.Format("{0} {1}", header, msg);
 #if DEBUG
-            Debug.WriteLine(message);
+                Debug.WriteLine(log);
 #else
-            Trace.WriteLine(message);
+                Trace.WriteLine(log);
 #endif
+            }
         }
 
         public static void Log(string message, Level level = Level.None)
