@@ -8,13 +8,17 @@ Audio Submodule of CygnusJam Game Engine.
 ## Summary ##
 
 Cgen.Audio is a simple yet powerful Cross-platform Audio Engine which is provides audio playbacks.
-Written under C# language based on [NVorbis](https://github.com/SirusDoma/nvorbis) and [OpenTK](https://github.com/opentk/opentk) (OpenAL).  
+Written under C# language based on OpenAL (with [OpenTK](https://github.com/opentk/opentk) binding).  
 
-The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.
+The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.  
+
+If you're looking for .NET Standard library that can be consumed in .NET Core application, head over to [.net-standard](https://github.com/SirusDoma/Cgen.Audio/tree/net-standard) branch! It also contain OGG Encoder which is not supported in this version of library.  
+
+If you really need OGG Encoder in .NET 2.0 version, then port [this](https://github.com/SteveLillis/.NET-Ogg-Vorbis-Encoder) encoder and make a pull request.
 
 ## Compiling Project ##
 
-By default, the project target framework is targeted to .NET 2.0 to ensure maximum backward compatibility against old hardware and / or old projects targeted to old framework. This framework is incompatible with .NET Core since it OpenTK that has not officially supported .NET Core.  
+By default, this project target framework is targeted to .NET 2.0 to ensure maximum backward compatibility against old hardware and / or old projects targeted to old framework.
 
 It is required to configure the Build Configuration Platform (`x86`/`x64`) of target application to match the library configuration. Avoid using `Any CPU` platform, because this framework uses native external dependencies (e.g: the engine may fail when deciding which version of `openal32.dll` to use).  
 
@@ -303,7 +307,7 @@ However, in case you're about to exit the program or library is no longer needed
     SoundSystem.Instance.Dispose();
 ```
 
-Note this will stop all playing sounds and music instances and dispose them, including the OpenAL that mentioned earlier.  
+Note this will stop all playing sounds and music instances and dispose them, including the OpenAL handle that mentioned earlier.  
 
 Performing any playback operation or modifying audio properties is no longer safe after this point.
 
