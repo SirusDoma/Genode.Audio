@@ -35,6 +35,7 @@ namespace Cgen.Audio
         private List<SoundSource> _sources = new List<SoundSource>();
         private List<int> _pool = new List<int>();
         private List<int> _allPools = new List<int>();
+        private SoundRecorder _recorder;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoundSystem"/> class
@@ -299,6 +300,30 @@ namespace Cgen.Audio
         }
 
         /// <summary>
+        /// Stop recording audio.
+        /// </summary>
+        /// <param name="recorder"><see cref="SoundRecorder"/> to stop recording.</param>
+        public void StopCapture()
+        {
+            _recorder?.Stop();
+        }
+
+        /// <summary>
+        /// Start recording with given <see cref="SoundRecorder"/> instance.
+        /// </summary>
+        /// <param name="recorder"><see cref="SoundRecorder"/> instance to record the audio</param>
+        public void StartCapture(SoundRecorder recorder)
+        {
+            if (_recorder == null)
+            {
+                _recorder = recorder;
+                _recorder.Start();
+            }
+            else
+                throw new Exception("Cannot start audio capture while another capture is running.");
+        }
+
+        /// <summary>
         /// Update the <see cref="SoundSystem"/>.
         /// </summary>
         public void Update()
@@ -307,6 +332,14 @@ namespace Cgen.Audio
             if (AudioDevice.IsDisposed)
             {
                 return;
+            }
+
+            // Update Recorder if any
+            if (_recorder != null)
+            {
+                _recorder.Update();
+                if (!_recorder.Capturing)
+                    _recorder = null;
             }
 
             // Remove and dispose unused sources
