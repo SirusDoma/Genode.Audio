@@ -67,10 +67,10 @@ namespace Cgen.Audio
         public Music(Stream stream)
             : this()
         {
-            _decoder = Decoders.CreateDecoder(stream);
+            _decoder = SoundProcessorFactory.CreateDecoder(stream);
             if (_decoder != null)
             {
-                _info = _decoder.Open(stream);
+                _info = _decoder.SampleInfo; //_decoder.Open(stream);
                 Initialize(_info.ChannelCount, _info.SampleRate);
             }
             else

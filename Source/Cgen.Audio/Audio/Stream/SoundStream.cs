@@ -69,7 +69,8 @@ namespace Cgen.Audio
                 SoundStatus oldStatus = Status;
 
                 // Stop the stream
-                Stop();
+                if (Status == SoundStatus.Playing)
+                    Stop();
 
                 // Let the derived class update the current position
                 OnSeek(value);
