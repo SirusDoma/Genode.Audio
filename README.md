@@ -3,7 +3,7 @@ Audio Submodule of CygnusJam Game Engine.
 
 - **Author**: SirusDoma
 - **Email**: com@cxo2.me
-- **Latest Version**: 1.5
+- **Latest Version**: 2.0
 
 ## Summary ##
 
