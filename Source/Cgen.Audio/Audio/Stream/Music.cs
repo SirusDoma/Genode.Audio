@@ -11,9 +11,9 @@ namespace Cgen.Audio
     public class Music : SoundStream
     {
         private SoundDecoder _decoder;
-        private TimeSpan    _duration;
-        private int         _sampleCount;
-        private SampleInfo  _info;
+        private TimeSpan     _duration;
+        private int          _sampleCount;
+        private SampleInfo   _info;
 
         /// <summary>
         /// Gets total duration of current <see cref="Music"/> object.
@@ -137,12 +137,6 @@ namespace Cgen.Audio
 
             // Initialize the stream
             base.Initialize(channelCount, sampleRate);
-        }
-
-        protected internal override void ResetBuffer()
-        {
-            //_decoder?.Dispose();
-            base.ResetBuffer();
         }
 
         /// <summary>
