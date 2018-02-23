@@ -99,5 +99,25 @@ namespace Cgen.Audio
             BaseStream.Seek(40, SeekOrigin.Begin);
             writer.Write(dataChunkSize);
         }
+
+        /// <summary>
+        /// Finalize the encoding process. It is recommended to call this before retrieving the encoded samples.
+        /// </summary>
+        public override void Flush()
+        {
+            base.Flush();
+
+            // Update the main chunk size and data sub-chunk size
+            int size = (int)BaseStream.Length;
+            int mainChunkSize = size - 8;  // 8 bytes RIFF header
+            int dataChunkSize = size - 44; // 44 bytes RIFF + WAVE headers
+
+            var writer = new BinaryWriter(BaseStream);
+            BaseStream.Seek(4, SeekOrigin.Begin);
+            writer.Write(mainChunkSize);
+
+            BaseStream.Seek(40, SeekOrigin.Begin);
+            writer.Write(dataChunkSize);
+        }
     }
 }

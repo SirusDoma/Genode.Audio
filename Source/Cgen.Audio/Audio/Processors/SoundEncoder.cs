@@ -77,10 +77,19 @@ namespace Cgen.Audio
         public abstract void Write(short[] samples, long count);
 
         /// <summary>
+        /// Finalize the encoding process.
+        /// It is recommended to call this before retrieving the encoded samples.
+        /// </summary>
+        public virtual void Flush()
+        {
+        }
+
+        /// <summary>
         /// Release all resources used by the <see cref="SoundEncoder"/>.
         /// </summary>
         public virtual void Dispose()
         {
+            Flush();
             if (OwnStream && !Invalid)
                 BaseStream?.Dispose();
         }

@@ -224,12 +224,11 @@ namespace Cgen.Audio
             where T : SoundEncoder
         {
             using (var stream = new MemoryStream())
+            using (var encoder = SoundProcessorFactory.CreateEncoder<T>(stream, SampleRate, ChannelCount, true))
             {
-                using (var encoder = SoundProcessorFactory.CreateEncoder<T>(stream, SampleRate, ChannelCount, true))
-                {
-                    encoder.Write(_samples, _samples.Length);
-                }
+                encoder.Write(_samples, _samples.Length);
 
+                encoder.Flush();
                 return stream.ToArray();
             }
         }

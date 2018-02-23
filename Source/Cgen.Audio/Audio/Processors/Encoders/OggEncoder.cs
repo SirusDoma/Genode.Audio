@@ -106,11 +106,20 @@ namespace Cgen.Audio
                 frameCount -= bufferSize;
 
                 // Flush any produced block
-                Flush();
+                FlushBlock();
             }
         }
 
-        public void Flush()
+        /// <summary>
+        /// Finalize the encoding process. It is recommended to call this before retrieving the encoded samples.
+        /// </summary>
+        public override void Flush()
+        {
+            base.Flush();
+            _state.WriteEndOfStream();
+        }
+
+        private void FlushBlock()
         {
             if (_ogg.Finished)
                 return;
@@ -129,6 +138,8 @@ namespace Cgen.Audio
                 }
             }
         }
+
+        
 
         public override void Dispose()
         {
