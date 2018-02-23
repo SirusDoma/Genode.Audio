@@ -18,14 +18,12 @@ namespace Cgen.Audio
             get; private set;
         }
 
-        public int SampleRate
+        /// <summary>
+        /// Gets the sample information of current <see cref="SoundDecoder"/> buffer.
+        /// </summary>
+        public SampleInfo SampleInfo
         {
-            get; private set;
-        }
-
-        public int ChannelCount
-        {
-            get; private set;
+            get; protected set;
         }
 
         /// <summary>
@@ -58,12 +56,11 @@ namespace Cgen.Audio
         /// <param name="ownStream">Specify whether the <see cref="SoundEncoder"/> should close the source <see cref="Stream"/> upon disposing the encoder.</param>
         public SoundEncoder(Stream stream, int sampleRate, int channelCount, bool ownStream = false)
         {
-            BaseStream   = stream;
-            SampleRate   = sampleRate;
-            ChannelCount = channelCount;
-            OwnStream    = ownStream;
+            BaseStream = stream;
+            SampleInfo = new SampleInfo(0, channelCount, sampleRate);
+            OwnStream  = ownStream;
 
-            Invalid      = !Initialize();
+            Invalid    = !Initialize();
         }
 
         /// <summary>

@@ -77,8 +77,6 @@ namespace Cgen.Audio
             return read;
         }
 
-        
-
         private static void CastBuffer(float[] inBuffer, short[] outBuffer, int length)
         {
             for (int i = 0; i < length; i++)

@@ -43,7 +43,7 @@ namespace Cgen.Audio
 
             // Setup the encoder: VBR, automatic bitrate management
             // Quality is in range [-1 .. 1], 0.4 gives ~128 kbps for a 44 KHz stereo sound
-            _vorbis = OggVorbisEncoder.VorbisInfo.InitVariableBitRate(ChannelCount, SampleRate, 0.1f);
+            _vorbis = OggVorbisEncoder.VorbisInfo.InitVariableBitRate(SampleInfo.ChannelCount, SampleInfo.SampleRate, 0.1f);
 
             // Generate header metadata (leave it empty)
             var headerBuilder = new OggVorbisEncoder.HeaderPacketBuilder();
@@ -60,8 +60,7 @@ namespace Cgen.Audio
             _ogg.PacketIn(booksPacket);
 
             // Flush to force audio data onto its own page per the spec
-            OggVorbisEncoder.OggPage page;
-            while (_ogg.PageOut(out page, true))
+            while (_ogg.PageOut(out OggVorbisEncoder.OggPage page, true))
             {
                 BaseStream.Write(page.Header, 0, page.Header.Length);
                 BaseStream.Write(page.Body, 0, page.Body.Length);
@@ -80,7 +79,7 @@ namespace Cgen.Audio
             int bufferSize = 65536;
 
             // A frame contains a sample from each channel
-            int frameCount = (int)count / ChannelCount;
+            int frameCount = (int)count / SampleInfo.ChannelCount;
 
             var data = new List<byte>();
             for (int i = 0; i < samples.Length; i++)
@@ -90,8 +89,8 @@ namespace Cgen.Audio
             while (frameCount > 0)
             {
                 // Prepare a buffer to hold samples
-                var buffer = new float[ChannelCount][];
-                for (int channel = 0; channel < ChannelCount; channel++)
+                var buffer = new float[SampleInfo.ChannelCount][];
+                for (int channel = 0; channel < SampleInfo.ChannelCount; channel++)
                     buffer[channel] = new float[Math.Min(frameCount, bufferSize)];
 
                 for (var i = 0; i < data.Count / 4; i++)
@@ -117,15 +116,13 @@ namespace Cgen.Audio
                 return;
 
             // Get new packets from the bitrate management engine
-            OggVorbisEncoder.OggPacket packet;
-            while (_state.PacketOut(out packet))
+            while (_state.PacketOut(out OggVorbisEncoder.OggPacket packet))
             {
                 // Write the packet to the ogg stream
                 _ogg.PacketIn(packet);
 
                 // If the stream produced new pages, write them to the output file
-                OggVorbisEncoder.OggPage page;
-                while (_ogg.PageOut(out page, false))
+                while (_ogg.PageOut(out OggVorbisEncoder.OggPage page, false))
                 {
                     BaseStream.Write(page.Header, 0, page.Header.Length);
                     BaseStream.Write(page.Body, 0, page.Body.Length);

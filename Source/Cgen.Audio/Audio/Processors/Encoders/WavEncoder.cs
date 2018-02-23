@@ -48,10 +48,10 @@ namespace Cgen.Audio
             writer.Write((short)WavFormat.PCM);
 
             // Write the sound attributes
-            writer.Write((short)ChannelCount);
-            writer.Write((int)SampleRate);
-            writer.Write((int)(SampleRate * ChannelCount * 2)); // Bitrate
-            writer.Write((short)(ChannelCount * 2)); // Block Align
+            writer.Write((short)SampleInfo.ChannelCount);
+            writer.Write((int)SampleInfo.SampleRate);
+            writer.Write((int)(SampleInfo.SampleRate * SampleInfo.ChannelCount * 2)); // Bitrate
+            writer.Write((short)(SampleInfo.ChannelCount * 2)); // Block Align
             writer.Write((short)16);
 
             // Write the sub-chunk 2 ("data") id and size
