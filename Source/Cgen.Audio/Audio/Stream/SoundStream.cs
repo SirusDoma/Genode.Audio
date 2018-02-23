@@ -19,14 +19,14 @@ namespace Cgen.Audio
         private const int BUFFER_COUNT = 3;
         private const int BUFFER_RETRIES = 2;
 
-        private bool _isStreaming = false, _stopping = false;
-        private int[] _buffers = new int[BUFFER_COUNT];
-        private int _channelCount = 0;
-        private int _sampleRate = 0;
-        private ALFormat _format = 0;
-        private bool _loop = false;
-        private long _processed = 0;
-        private bool[] _endBuffers = new bool[BUFFER_COUNT];
+        private bool   _isStreaming  = false, _stopping = false;
+        private int[]  _buffers      = new int[BUFFER_COUNT];
+        private int    _channelCount = 0;
+        private int    _sampleRate   = 0;
+        private bool   _loop         = false;
+        private long   _processed    = 0;
+        private long[] _bufferSeeks  = new long[BUFFER_COUNT];
+        private ALFormat _format     = 0;
 
         /// <summary>
         /// Gets the number of channels used by current <see cref="SoundStream"/> object.
@@ -65,19 +65,11 @@ namespace Cgen.Audio
             }
             set
             {
-                // Get old playing status
-                SoundStatus oldStatus = Status;
-
-                // Stop the stream
-                if (Status == SoundStatus.Playing)
-                    Stop();
-
                 // Let the derived class update the current position
                 OnSeek(value);
 
                 // Restart streaming
-                _processed = (long)(value.TotalSeconds * _sampleRate * _channelCount);
-                _isStreaming = oldStatus != SoundStatus.Stopped;
+                _processed   = (long)(value.TotalSeconds * _sampleRate * _channelCount);
             }
         }
 
@@ -117,7 +109,7 @@ namespace Cgen.Audio
             if (_isStreaming)
             {
                 // The stream has been interrupted!
-                if (base.Status == SoundStatus.Stopped)
+                if (Status == SoundStatus.Stopped)
                 {
                     if (!_stopping)
                         ALChecker.Check(() => AL.SourcePlay(Handle));
@@ -132,8 +124,7 @@ namespace Cgen.Audio
                 while (nbProcessed-- > 0)
                 {
                     // Pop the first unused buffer from the queue
-                    int buffer = 0;
-                    ALChecker.Check(() => buffer = AL.SourceUnqueueBuffer(Handle));
+                    int buffer = ALChecker.Check(() => AL.SourceUnqueueBuffer(Handle));
 
                     // Find its number
                     int bufferNum = 0;
@@ -147,11 +138,11 @@ namespace Cgen.Audio
                     }
 
                     // Retrieve its size and add it to the samples count
-                    if (_endBuffers[bufferNum])
+                    if (_bufferSeeks[bufferNum] != -1)
                     {
-                        // This was the last buffer: reset the sample count
-                        _processed = 0;
-                        _endBuffers[bufferNum] = false;
+                        // This was the last buffer before EOF or Loop End: reset the sample count
+                        _processed = _bufferSeeks[bufferNum];
+                        _bufferSeeks[bufferNum] = -1;
                     }
                     else
                     {
@@ -206,46 +197,58 @@ namespace Cgen.Audio
             // Reset stop flag
             _stopping = false;
 
-            // Create the buffers
-            //ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
-            for (int i = 0; i < BUFFER_COUNT; ++i)
+            // Check if the source status was stopped before update began
+            if (Status == SoundStatus.Stopped)
             {
-                _buffers[i] = ALChecker.Check(() => AL.GenBuffer());
-                _endBuffers[i] = false;
+                _isStreaming = false;
+                return;
             }
+
+            // Create the buffers
+            _buffers = ALChecker.Check(() => AL.GenBuffers(BUFFER_COUNT));
+            for (int i = 0; i < BUFFER_COUNT; ++i)
+                _bufferSeeks[i] = -1;
 
             // Fill the queue
             _stopping = FillQueue();
         }
 
-        private bool FillAndPushBuffer(int bufferNum)
+        private bool FillAndPushBuffer(int bufferNum, bool immediateLoop = false)
         {
             bool requestStop = false;
 
             // Acquire audio data
             short[] samples = null;
-            if (!OnGetData(out samples))
+            for (int retryCount = 0; !OnGetData(out samples) && (retryCount < BUFFER_RETRIES); ++retryCount)
             {
-                // Mark the buffer as the last one (so that we know when to reset the playing position)
-                _endBuffers[bufferNum] = true;
-
                 // Check if the stream must loop or stop
-                if (_loop)
+                if (!_loop)
                 {
-                    // Return to the beginning of the stream source
-                    OnSeek(TimeSpan.Zero);
+                    // Not looping: Mark this buffer as ending with 0 and request stop
+                    if (samples != null && samples.Length > 0)
+                        _bufferSeeks[bufferNum] = 0;
 
-                    // If we previously had no data, try to fill the buffer once again
-                    if (samples == null || (samples.Length == 0))
-                    {
-                        return FillAndPushBuffer(bufferNum);
-                    }
+                    _stopping = true;
+                    break;
                 }
-                else
+
+                // Return to the beginning or loop-start of the stream source using onLoop(), and store the result in the buffer seek array
+                // This marks the buffer as the "last" one (so that we know where to reset the playing position)
+                _bufferSeeks[bufferNum] = OnLoop();
+
+                // If we got data, break and process it, else try to fill the buffer once again
+                if (samples != null && samples.Length > 0)
+                    break;
+
+                // If immediateLoop is specified, we have to immediately adjust the sample count
+                if (immediateLoop && (_bufferSeeks[bufferNum] != -1))
                 {
-                    // Not looping: request stop
-                    requestStop = true;
+                    // We just tried to begin preloading at EOF or Loop End: reset the sample count
+                    _processed = _bufferSeeks[bufferNum];
+                    _bufferSeeks[bufferNum] = -1;
                 }
+
+                // We're a looping sound that got no data, so we retry onGetData()
             }
 
             // Fill the buffer if some data was returned
@@ -260,6 +263,10 @@ namespace Cgen.Audio
                 // Push it into the sound queue
                 ALChecker.Check(() => AL.SourceQueueBuffer(Handle, buffer));
             }
+            else
+            {
+                requestStop = true;
+            }
 
             return requestStop;
         }
@@ -270,7 +277,7 @@ namespace Cgen.Audio
             bool requestStop = false;
             for (int i = 0; (i < BUFFER_COUNT) && !requestStop; ++i)
             {
-                if (FillAndPushBuffer(i))
+                if (FillAndPushBuffer(i, i == 0))
                     requestStop = true;
             }
 
@@ -307,6 +314,19 @@ namespace Cgen.Audio
         protected abstract void OnSeek(TimeSpan time);
 
         /// <summary>
+        /// Change the current playing position in the stream source to the beginning of the loop.
+        /// <para>
+        /// This function can be overridden by derived classes to allow implementation of custom loop points. Otherwise,
+        /// it just calls onSeek(Time::Zero) and returns 0.</para>
+        /// </summary>
+        /// <returns>The seek position after looping (or -1 if there's no loop).</returns>
+        protected virtual long OnLoop()
+        {
+            OnSeek(TimeSpan.Zero);
+            return 0;
+        }
+
+        /// <summary>
         /// Performs initialization steps by providing the audio stream parameters.
         /// </summary>
         /// <param name="channelCount">The number of channels of current <see cref="SoundStream"/> object.</param>
@@ -315,9 +335,9 @@ namespace Cgen.Audio
         {
             // Reset the current states
             _channelCount = channelCount;
-            _sampleRate = sampleRate;
-            _processed = 0;
-            _isStreaming = false;
+            _sampleRate   = sampleRate;
+            _processed    = 0;
+            _isStreaming  = false;
 
             // Deduce the format from the number of channels
             _format = AudioDevice.GetFormat(channelCount);
@@ -341,13 +361,13 @@ namespace Cgen.Audio
                     "Audio parameters must be initialized before played.");
             }
 
-            if (_isStreaming && (base.Status == SoundStatus.Paused))
+            if (_isStreaming && (Status == SoundStatus.Paused))
             {
                 // If the sound is paused, resume it
                 ALChecker.Check(() => AL.SourcePlay(Handle));
                 return;
             }
-            else if (_isStreaming && (base.Status == SoundStatus.Playing))
+            else if (_isStreaming && (Status == SoundStatus.Playing))
             {
                 // If the sound is playing, stop it and continue as if it was stopped
                 Stop();
@@ -357,7 +377,7 @@ namespace Cgen.Audio
             OnSeek(TimeSpan.Zero);
 
             // Start updating the stream in a separate thread to avoid blocking the application
-            _processed = 0;
+            _processed  = 0;
             _isStreaming = true;
 
             // Preload the stream buffer
@@ -383,6 +403,7 @@ namespace Cgen.Audio
         /// </summary>
         protected internal override void Stop()
         {
+            // Set the flag to stop
             _isStreaming = false;
 
             // Stop the playback
@@ -390,9 +411,6 @@ namespace Cgen.Audio
 
             // Force to update the stream to finalize the buffer and queue
             ClearQueue();
-
-            // Move to the beginning
-            OnSeek(TimeSpan.Zero);
 
             // Reset the playing position
             _processed = 0;
