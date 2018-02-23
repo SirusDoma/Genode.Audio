@@ -17,11 +17,6 @@ namespace Cgen.Audio
             return extension.ToLower().EndsWith("wav");
         }
 
-        private int _bytesPerSample;
-        private long _offsetStart;
-        private long _offsetEnd;
-        private WavFormat _format;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="WavDecoder"/> class.
         /// </summary>

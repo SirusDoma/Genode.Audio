@@ -24,7 +24,6 @@ namespace Cgen.Audio
         private float _volume         = 100f;
         private Vector3 _position     = new Vector3(0, 0, 0);
         private float _pitch          = 1f;
-        private bool _looping         = false;
         private float _attenuation    = 1f;
         private float _minDistance    = 1f;
         private bool _relativeListner = false;
