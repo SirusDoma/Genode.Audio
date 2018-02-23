@@ -300,6 +300,42 @@ namespace Cgen.Audio
         }
 
         /// <summary>
+        /// Pause all playing <see cref="SoundSource"/> objects.
+        /// </summary>
+        public void Pause()
+        {
+            for (int i = _sources.Count - 1; i >= 0; i--)
+            {
+                if (_sources[i] != null)
+                    Pause(_sources[i]);
+            }
+        }
+
+        /// <summary>
+        /// Resume all paused <see cref="SoundSource"/> objects.
+        /// </summary>
+        public void Resume()
+        {
+            for (int i = _sources.Count - 1; i >= 0; i--)
+            {
+                if (_sources[i] != null && _sources[i].Status == SoundStatus.Paused)
+                    _sources[i].Play();
+            }
+        }
+
+        /// <summary>
+        /// Stop all playing <see cref="SoundSource"/> objects.
+        /// </summary>
+        public void Stop()
+        {
+            for (int i = _sources.Count - 1; i >= 0; i--)
+            {
+                if (_sources[i] != null)
+                    Stop(_sources[i]);
+            }
+        }
+
+        /// <summary>
         /// Stop recording audio.
         /// </summary>
         /// <param name="recorder"><see cref="SoundRecorder"/> to stop recording.</param>
