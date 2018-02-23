@@ -28,10 +28,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="OpenTK.NETCore" Version="1.1.2749.6433" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Cgen.Audio\Cgen.Audio.csproj" />
   </ItemGroup>
 

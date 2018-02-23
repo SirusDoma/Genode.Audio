@@ -8,9 +8,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{B6308C
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cgen.Audio", "Source\Cgen.Audio\Cgen.Audio.csproj", "{C0A04657-C42A-4F54-89FE-233A858572C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Cgen.Audio", "Source\Cgen.Audio\Cgen.Audio.csproj", "{C0A04657-C42A-4F54-89FE-233A858572C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example", "Source\Example\Example.csproj", "{C44481FE-CF3A-4459-9313-8D4D1A660272}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example", "Source\Example\Example.csproj", "{C44481FE-CF3A-4459-9313-8D4D1A660272}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
