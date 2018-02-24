@@ -10,23 +10,19 @@ Audio Submodule of CygnusJam Game Engine.
 Cgen.Audio is a simple yet powerful Cross-platform Audio Engine which is provides audio playbacks.
 Written under C# language based on OpenAL (with [OpenTK](https://github.com/opentk/opentk) binding).  
 
-The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.
-
-### .NET Standard Branch ###
-
-This branch has been modified to become .NET Standard library that can be consumed in .NET Core application. The included example also has been re-written into .NET Core 2.0. There is also OGG Encoder included for this branch.  
-
-Checkout *Compiling Project* section for further details.  
+The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.  
+This project is rewritten .NET Standard and will no longer supporting initial framework target, which is .NET Framework 2.0  
 
 ## Compiling Project ##
 
-In this branch, the project framework is re-targeted to .NET Standard to ensure it consumable by .NET 4.7 or .NET Core projects for cross platform compilation. This framework also make a use of OpenTK.NETCore, which is the official OpenTK package for .NET Core.
+The project framework is targeted to .NET Standard to ensure maximum compatibility between .NET 4.7 and .NET Core projects. This framework also make a use of OpenTK.NETCore, which is the official OpenTK package for .NET Core. Moreover, this library itself written purely in managed C#, including encoders and decoders. But still, it may use native dependencies, such as OpenAL. See [Dependencies](#dependencies) for more details.
 
-It is required to configure the Build Configuration Platform (`x86`/`x64`) of target application to match the library configuration. Avoid using `Any CPU` platform, because this framework uses native external dependencies (e.g: the engine may fail when deciding which version of `openal32.dll` to use).  
+It is also required to configure the Build Configuration Platform (`x86`/`x64`) of target application to match the library configuration. Avoid using `Any CPU` platform, because this framework uses native external dependencies (e.g: the engine may fail when deciding which version of `openal32.dll` to use).  
 
 ## Documentation ##
 
-Currently, the engine doesn't have detailed API reference and therefore, the basic usages is covered along with this document.
+Currently, the engine doesn't have detailed API reference and therefore, the basic usages is covered along with this document.  
+You're welcomed to contribute the API Documentation, submit pull request and I'll be happy to take care the rest!  
 
 ### 1. Initialization ###
 
@@ -42,7 +38,7 @@ Technically, `SoundSystem` handle `SoundSource` lifecycle by poolling of stopped
 
 However, maximum `SoundSource`'s that can be played at the same time still exists, the hard limit of `SoundSource`'s may fairly different across multiple platforms, however the engine put constant hard limit up to **256 sources**. This number should be more than enough for all cases, even if you're trying to simulate an ochestra.  
 
-Unlike in the previous version of API, you will need call `SoundSystem.Instance.Update()` manually and regularly. Also, **You have to call the `SoundSystem.Instance.Update()` at the same thread as you play the `Sound` or `Music`**. In other words, you should **NOT** perform `SoundSystem.Instance.Play(sound)` or `SoundSystem.Instance.Play(music)` at different thread than update cycle!  
+Unlike the previous version of API, you will need call `SoundSystem.Instance.Update()` manually and regularly. Also, **You have to call the `SoundSystem.Instance.Update()` at the same thread as you play the `Sound` or `Music`**. In other words, you should **NOT** perform `SoundSystem.Instance.Play(sound)` or `SoundSystem.Instance.Play(music)` at different thread than update cycle!  
 
 This due to the engine limitation that cannot protect the `SoundSource` from thread race with mutex without suffering a stutter. However, you're still allowed to play the `Sound` and `Music` and call `SoundSystem.Instance.Update()` in a separate thread, as long they share same thread, you also may want to call `AudioDevice.MakeCurrent()` to make OpenAL running on your thread. 
 
@@ -133,7 +129,7 @@ The `Sound` and `Music` provide more or less the same features, You can `Play`, 
     Console.WriteLine(bell.Status); // SoundStatus.Stopped
 ```
 
-Note that it is recommended that you leave the `Sound` and `Music` without disposing them. See *Cleanup* section for more information
+Note that it is recommended that you leave the `Sound` and `Music` without disposing them. See [Cleanup](#cleanup) section for more information
 
 ### 5. Modifying Audio Elements ###
 
@@ -288,21 +284,27 @@ In case you dislike lambda, perform error checking by calling `ALCheker.CheckErr
     ALChecker.CheckError();
 ```
 
-Any error will printed via `Cgen.Logger`. Check and explore `Cgen.Internal.OpenAL.ALChecker` and `Cgen.Logger` for more information.
+Any error will printed via `Cgen.Logger`. 
+Check the sources in case you're curious about how it works.
 
 ### 10. Audio Capture ###
 
-You can also record audio from your audio input device such as Microphone. use `SoundBufferRecorder` to record audio to `SoundBuffer`, you can also make your own implementation by implement `SoundRecorder` class. Basically, you only want do this when you're didn't intend to save rocorder on `SoundBuffer` and / or prefer to stream it instead, such as VoIP.
+You can also record audio from your audio input device such as Microphone. use `SoundBufferRecorder` to record audio to `SoundBuffer`, you can also make your own implementation by implement `SoundRecorder` class. Basically, you only want do this when you don't want to save the recorded audio on `SoundBuffer` and / or prefer to stream it instead, such as VoIP.
 
-The API quite look the same as playback, but you will need to use `Capture()` instead of `Play()`.
+The API very similar to playback API, but you will need to use `Capture()` instead of `Play()`.
 
-### 11. Cleanup ###
+## Cleanup ##
 
 It is recommended that you do not disposing `SoundSource` (`Sound` or `Music`) right after it is not used, Disposing `SoundSource` will releasing OpenAL handle, which mean it cannot be reused and recycled by pool system of `SoundSystem`.    
 
 Disposing of `SoundSource` will not give you significant benefit both in term of memory usage or cpu utilization. Because the buffer will be enqueued anyway to save memory and keep `SoundSource` state reusable while the OpenAL handle itself only take small amount of bytes.  
 
-However, in case you're about to exit the program or library is no longer needed, it is recommended to perform the cleanup.  
+In addition to disposing OpenAL Handle, the OpenAL sound buffer data will be disposed as well. OpenAL buffers often referenced by multiple amount of `SoundSource` instances, especially `Sound` class. The library itself automatically re-generate buffers from decoded audio data when needed, but at very rare-cases, such as threading race, this may lead to an error when multple sources share same `SoundBuffer` (or other OpenAL buffers), most likely they will fail to load and / or play.  
+
+Still, you can dispose it anyway, the disposed handle won't be preserved in the pool and will be enqueued from playing pool and unused pool to prevent reused again by another source. Remember, this may impact the performance of the application, as deleting and recreating handle is more expensive than reusing unused source.  
+
+Only dispose when you're sure that the `SoundSource` instances are no longer needed and the buffers must be released.  
+Also, in case you're about to exit the program or library is no longer needed, it is recommended to perform the cleanup.  
 
 ```
     // Dispose SoundSystem
