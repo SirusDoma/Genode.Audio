@@ -29,6 +29,19 @@ namespace Cgen.Audio
         private ALFormat _format     = 0;
 
         /// <summary>
+        /// Gets the current status of current <see cref="SoundStream"/> object.
+        /// </summary>
+        public override SoundStatus Status
+        {
+            get
+            {
+                if (_isStreaming)
+                    return SoundStatus.Playing;
+                return base.Status;
+            }
+        }
+
+        /// <summary>
         /// Gets the number of channels used by current <see cref="SoundStream"/> object.
         /// </summary>
         public int ChannelCount
@@ -69,7 +82,7 @@ namespace Cgen.Audio
                 OnSeek(value);
 
                 // Restart streaming
-                _processed   = (long)(value.TotalSeconds * _sampleRate * _channelCount);
+                _processed = (long)(value.TotalSeconds * _sampleRate * _channelCount);
             }
         }
 
@@ -109,7 +122,7 @@ namespace Cgen.Audio
             if (_isStreaming)
             {
                 // The stream has been interrupted!
-                if (Status == SoundStatus.Stopped)
+                if (base.Status == SoundStatus.Stopped)
                 {
                     if (!_stopping)
                         ALChecker.Check(() => AL.SourcePlay(Handle));
@@ -179,16 +192,19 @@ namespace Cgen.Audio
                     }
                 }
             }
-            else if (_stopping && _processed != 0)
+            else if (_stopping)
             {
+                // Turn off the flag
+                _stopping = false;
+
                 // Stop the playback
                 ALChecker.Check(() => AL.SourceStop(Handle));
 
                 // Dequeue any buffer left in the queue
                 ClearQueue();
 
-                _processed = 0;
-                _stopping  = false;
+                // This will ensure the playing offset at the end of duration
+                _processed = (long)(Duration.TotalSeconds * _channelCount * _sampleRate);
             }
         }
 
@@ -196,13 +212,6 @@ namespace Cgen.Audio
         {
             // Reset stop flag
             _stopping = false;
-
-            // Check if the source status was stopped before update began
-            if (Status == SoundStatus.Stopped)
-            {
-                _isStreaming = false;
-                return;
-            }
 
             // Create the buffers
             _buffers = ALChecker.Check(() => AL.GenBuffers(BUFFER_COUNT));
@@ -291,13 +300,11 @@ namespace Cgen.Audio
             ALChecker.Check(() => AL.GetSource(Handle, ALGetSourcei.BuffersQueued, out nbQueued));
 
             // Dequeue them all
-            int buffer = 0;
             for (int i = 0; i < nbQueued; ++i)
-                ALChecker.Check(() => buffer = AL.SourceUnqueueBuffer(Handle));
+                ALChecker.Check(() => AL.SourceUnqueueBuffer(Handle));
 
             // Delete the buffers
-            ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
-            ALChecker.Check(() => AL.DeleteBuffers(_buffers));
+            ResetBuffer();
         }
 
         /// <summary>
@@ -361,13 +368,13 @@ namespace Cgen.Audio
                     "Audio parameters must be initialized before played.");
             }
 
-            if (_isStreaming && (Status == SoundStatus.Paused))
+            if (_isStreaming && (base.Status == SoundStatus.Paused))
             {
                 // If the sound is paused, resume it
                 ALChecker.Check(() => AL.SourcePlay(Handle));
                 return;
             }
-            else if (_isStreaming && (Status == SoundStatus.Playing))
+            else if (_isStreaming && (base.Status == SoundStatus.Playing))
             {
                 // If the sound is playing, stop it and continue as if it was stopped
                 Stop();
@@ -377,7 +384,7 @@ namespace Cgen.Audio
             OnSeek(TimeSpan.Zero);
 
             // Start updating the stream in a separate thread to avoid blocking the application
-            _processed  = 0;
+            _processed = 0;
             _isStreaming = true;
 
             // Preload the stream buffer
@@ -411,16 +418,20 @@ namespace Cgen.Audio
 
             // Force to update the stream to finalize the buffer and queue
             ClearQueue();
-
-            // Reset the playing position
-            _processed = 0;
         }
 
         protected internal override void ResetBuffer()
         {
             _isStreaming = false;
             ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
-            ALChecker.Check(() => AL.DeleteBuffers(_buffers));
+            for (int i = 0; i < BUFFER_COUNT; i++)
+            {
+                if (_buffers[i] != 0)
+                {
+                    ALChecker.Check(() => AL.DeleteBuffer(_buffers[i]));
+                    _buffers[i] = 0;
+                }
+            }
         }
 
         /// <summary>
@@ -428,10 +439,8 @@ namespace Cgen.Audio
         /// </summary>
         public override void Dispose()
         {
-            _isStreaming = false;
-
+            ResetBuffer();
             base.Dispose();
-            ALChecker.Check(() => AL.DeleteBuffers(_buffers));
         }
     }
 }
