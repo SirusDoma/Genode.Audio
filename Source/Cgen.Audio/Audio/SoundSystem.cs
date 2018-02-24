@@ -403,7 +403,7 @@ namespace Cgen.Audio
                 }
 
                 // Check whether the specified source can be restored into source pool
-                if (!_sources[i].Validate() || _sources[i].Status == SoundStatus.Stopped)
+                if (_sources[i].Status == SoundStatus.Stopped)
                 {
                     // Reset the buffer to freed memory
                     _sources[i].ResetBuffer();
