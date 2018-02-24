@@ -12,7 +12,7 @@ Written under C# language based on OpenAL (with [OpenTK](https://github.com/open
 
 The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.  
 
-This project has been rewritten .NET Standard and will no longer supporting initial framework target, which is .NET Framework 2.0  
+This project has been rewritten to be compatibile with .NET Standard and will no longer supporting initial framework target, which is .NET Framework 2.0  
 
 ## Compiling Project ##
 
@@ -23,6 +23,7 @@ It is also required to configure the Build Configuration Platform (`x86`/`x64`) 
 ## Documentation ##
 
 Currently, the engine doesn't have detailed API reference and therefore, the basic usages is covered along with this document.  
+
 You're welcomed to contribute the API Documentation, submit pull request and I'll be happy to take care the rest!  
 
 ### 1. Initialization ###
