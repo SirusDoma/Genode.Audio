@@ -11,7 +11,8 @@ Cgen.Audio is a simple yet powerful Cross-platform Audio Engine which is provide
 Written under C# language based on OpenAL (with [OpenTK](https://github.com/opentk/opentk) binding).  
 
 The main idea is to provide an audio playback that simple and fast. If you prefer simplicity over fancy features, then this audio engine is for you.  
-This project is rewritten .NET Standard and will no longer supporting initial framework target, which is .NET Framework 2.0  
+
+This project has been rewritten .NET Standard and will no longer supporting initial framework target, which is .NET Framework 2.0  
 
 ## Compiling Project ##
 
