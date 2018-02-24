@@ -296,15 +296,15 @@ The API very similar to playback API, but you will need to use `Capture()` inste
 
 ## Cleanup ##
 
-It is recommended that you do not disposing `SoundSource` (`Sound` or `Music`) right after it is not used, Disposing `SoundSource` will releasing OpenAL handle, which mean it cannot be reused and recycled by pool system of `SoundSystem`.    
+It is recommended that you do not disposing `SoundSource` (`Sound` or `Music`) right after the source is stopped or no longer in use, OpenAL Handle will be released upon `SoundSource` disposal, which mean it cannot be reused and recycled by pool system of `SoundSystem`.    
 
-Disposing of `SoundSource` will not give you significant benefit both in term of memory usage or cpu utilization. Because the buffer will be enqueued anyway to save memory and keep `SoundSource` state reusable while the OpenAL handle itself only take small amount of bytes.  
+Disposing `SoundSource` will not give you significant benefit both in term of memory usage or cpu utilization. Because the buffer will be enqueued anyway to save memory and keep `SoundSource` state reusable while the OpenAL handle itself only take small amount of bytes.  
 
 In addition to disposing OpenAL Handle, the OpenAL sound buffer data will be disposed as well. OpenAL buffers often referenced by multiple amount of `SoundSource` instances, especially `Sound` class. The library itself automatically re-generate buffers from decoded audio data when needed, but at very rare-cases, such as threading race, this may lead to an error when multple sources share same `SoundBuffer` (or other OpenAL buffers), most likely they will fail to load and / or play.  
 
 Still, you can dispose it anyway, the disposed handle won't be preserved in the pool and will be enqueued from playing pool and unused pool to prevent reused again by another source. Remember, this may impact the performance of the application, as deleting and recreating handle is more expensive than reusing unused source.  
 
-Only dispose when you're sure that the `SoundSource` instances are no longer needed and the buffers must be released.  
+Only dispose when you're sure that the `SoundSource` instances are no longer needed and the buffers must be released due to massive number of buffers (or decoders for `Music` instances) that live in memory.  
 Also, in case you're about to exit the program or library is no longer needed, it is recommended to perform the cleanup.  
 
 ```
