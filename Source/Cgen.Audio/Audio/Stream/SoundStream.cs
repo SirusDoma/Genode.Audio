@@ -202,9 +202,6 @@ namespace Cgen.Audio
 
                 // Dequeue any buffer left in the queue
                 ClearQueue();
-
-                // This will ensure the playing offset at the end of duration
-                _processed = (long)(Duration.TotalSeconds * _channelCount * _sampleRate);
             }
         }
 
