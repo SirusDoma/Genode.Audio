@@ -197,11 +197,15 @@ namespace Cgen.Audio
                 // Turn off the flag
                 _stopping = false;
 
-                // Stop the playback
-                ALChecker.Check(() => AL.SourceStop(Handle));
+                // Prevent enqueued when having invalid handle
+                if (Validate())
+                {
+                    // Stop the playback
+                    ALChecker.Check(() => AL.SourceStop(Handle));
 
-                // Dequeue any buffer left in the queue
-                ClearQueue();
+                    // Dequeue any buffer left in the queue
+                    ClearQueue();
+                }
             }
         }
 
@@ -420,7 +424,9 @@ namespace Cgen.Audio
         protected internal override void ResetBuffer()
         {
             _isStreaming = false;
-            ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
+            if (Validate())
+                ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
+
             for (int i = 0; i < BUFFER_COUNT; i++)
             {
                 if (_buffers[i] != 0)
