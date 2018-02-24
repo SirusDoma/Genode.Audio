@@ -333,6 +333,13 @@ List of dependencies:
 
 ## Version History ##
 
+### v2.0.5
+- Improved `SoundSystem` pool handling.
+- Improved `SoundStream` buffers handling and processing
+- Encoder now expose `SampleInfo` to determine sample meta data
+- Added `Pause()`, `Resume()` and `Stop()` to manipulate all playing `SoundSource` instances
+- Minor Bugfixes
+
 ### v2.0
 This release contains minor breaking changes  
 - Reworked Sound Decoder
