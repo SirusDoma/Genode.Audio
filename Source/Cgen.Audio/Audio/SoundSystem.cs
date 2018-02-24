@@ -428,7 +428,7 @@ namespace Cgen.Audio
         /// </summary>
         public virtual void Dispose()
         {
-            _sources.Clear();
+            // Copy the pool to array to prevent threading issues
             var pool = _allPools.ToArray();
             foreach (int source in pool)
             {
@@ -437,6 +437,19 @@ namespace Cgen.Audio
                 Stop(sound);
                 sound.Dispose();
             }
+
+            // Copy playing sources as well
+            var sources = _sources.ToArray();
+            foreach (var source in sources)
+            {
+                Stop(source);
+                source.Dispose();
+            }
+
+            // Clear the stacks and dispose the device
+            _sources.Clear();
+            _allPools.Clear();
+            _pool.Clear();
 
             AudioDevice.Dispose();
         }
