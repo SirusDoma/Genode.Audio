@@ -80,6 +80,7 @@ namespace Cgen.Audio
         public override void Write(short[] samples, long count)
         {
             var writer = new BinaryWriter(BaseStream);
+            long writeCount = 0;
             for (int i = 0; i < count; i++)
             {
                 if (i >= samples.Length)
@@ -88,16 +89,8 @@ namespace Cgen.Audio
                 writer.Write((short)samples[i]);
             }
 
-            // Update the main chunk size and data sub-chunk size
-            int size = (int)BaseStream.Length;
-            int mainChunkSize = size - 8;  // 8 bytes RIFF header
-            int dataChunkSize = size - 44; // 44 bytes RIFF + WAVE headers
-
-            BaseStream.Seek(4, SeekOrigin.Begin);
-            writer.Write(mainChunkSize);
-
-            BaseStream.Seek(40, SeekOrigin.Begin);
-            writer.Write(dataChunkSize);
+            Flush();
+            SampleInfo = new SampleInfo((int)(SampleInfo.SampleCount + writeCount), SampleInfo.ChannelCount, SampleInfo.SampleRate);
         }
 
         /// <summary>

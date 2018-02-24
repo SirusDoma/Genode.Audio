@@ -86,6 +86,7 @@ namespace Cgen.Audio
                 data.AddRange(BitConverter.GetBytes(samples[i]));
 
             bufferSize = data.Count / 4;
+            long writeCount = 0;
             while (frameCount > 0)
             {
                 // Prepare a buffer to hold samples
@@ -98,6 +99,8 @@ namespace Cgen.Audio
                     // uninterleave samples
                     buffer[0][i] = (short)((data[i * 4 + 1] << 8) | (0x00ff & data[i * 4])) / 32768f;
                     buffer[1][i] = (short)((data[i * 4 + 3] << 8) | (0x00ff & data[i * 4 + 2])) / 32768f;
+
+                    writeCount += 2;
                 }
 
                 // Tell the library how many samples we've written
@@ -108,6 +111,8 @@ namespace Cgen.Audio
                 // Flush any produced block
                 FlushBlock();
             }
+
+            SampleInfo = new SampleInfo((int)(SampleInfo.SampleCount + writeCount), SampleInfo.ChannelCount, SampleInfo.SampleRate);
         }
 
         /// <summary>
