@@ -169,9 +169,11 @@ namespace Cgen.Audio
         /// </summary>
         protected internal override void ResetBuffer()
         {
-            // First stop the sound in case it is playing
-            if (Handle > 0)
+            if (Validate())
             {
+                // First stop the sound in case it is playing
+                Stop();
+
                 // Detach the buffer
                 ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
 
@@ -186,27 +188,7 @@ namespace Cgen.Audio
         public override void Dispose()
         {
             base.Dispose();
-            
-            if (Buffer != null && ALChecker.Check(() => AL.IsBuffer((int)Buffer.Handle)))
-            {
-                ALChecker.Check(() => AL.DeleteBuffer((int)Buffer.Handle));
-            }
-
-            //var sources = SoundSystem.Instance.GetPlayingSources();
-            //for (int i = 0; i < sources.Length;)
-            //{
-            //    var sound = sources[i] as Sound;
-            //    if (sound?.Buffer?.Handle == Buffer?.Handle)
-            //    {
-            //        sound.Stop();
-            //        SoundSystem.Instance.Queue(sound);
-            //        continue;
-            //    }
-
-            //    i++;
-            //}
-
-            //ResetBuffer();
+            Buffer?.Dispose();
         }
     }
 }

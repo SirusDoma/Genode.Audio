@@ -45,7 +45,7 @@ namespace Cgen.Audio
             get
             {
                 int rate = 0;
-                ALChecker.Check(() => AL.GetBuffer(_buffer, ALGetBufferi.Frequency, out rate));
+                ALChecker.Check(() => AL.GetBuffer(Handle, ALGetBufferi.Frequency, out rate));
 
                 return rate;
             }
@@ -59,7 +59,7 @@ namespace Cgen.Audio
             get
             {
                 int count = 0;
-                ALChecker.Check(() => AL.GetBuffer(_buffer, ALGetBufferi.Channels, out count));
+                ALChecker.Check(() => AL.GetBuffer(Handle, ALGetBufferi.Channels, out count));
 
                 return count;
             }
@@ -187,7 +187,7 @@ namespace Cgen.Audio
 
             // fill the buffer
             int size = _samples.Length * sizeof(short);
-            ALChecker.Check(() => AL.BufferData(_buffer, format, _samples, size, sampleRate));
+            ALChecker.Check(() => AL.BufferData(Handle, format, _samples, size, sampleRate));
 
             // Compute the duration
             _duration = TimeSpan.FromSeconds((float)_samples.Length / sampleRate / channelCount);
@@ -263,8 +263,8 @@ namespace Cgen.Audio
                 sound.ResetBuffer();
 
             // Destroy the buffer
-            if (_buffer > 0)
-                ALChecker.Check(() => AL.DeleteBuffer(_buffer));
+            if (ALChecker.Check(() => AL.IsBuffer(Handle)))
+                ALChecker.Check(() => AL.DeleteBuffer(Handle));
         }
     }
 }
