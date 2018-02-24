@@ -44,10 +44,9 @@ namespace Cgen.Audio
         /// </summary>
         /// <param name="filename">The path of the sound file to load.</param>
         public Music(string filename)
-            : this(new MemoryStream(File.ReadAllBytes(filename)))
+            : this(File.Open(filename, FileMode.Open))
         {
         }
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Music"/> class
@@ -55,7 +54,7 @@ namespace Cgen.Audio
         /// </summary>
         /// <param name="data">An array of byte contains sound data to load.</param>
         public Music(byte[] data)
-            : this(new MemoryStream(data))
+            : this(new MemoryStream(data), true)
         {
         }
 
@@ -64,10 +63,11 @@ namespace Cgen.Audio
         /// from specified <see cref="Stream"/> containing sound data.
         /// </summary>
         /// <param name="stream">A <see cref="Stream"/> contains sound data to load.</param>
-        public Music(Stream stream)
+        /// <param name="ownStream">Specifiy a value indicating whether the source stream should be disposed along with instance disposal.</param>
+        public Music(Stream stream, bool ownStream = true)
             : this()
         {
-            _decoder = SoundProcessorFactory.CreateDecoder(stream);
+            _decoder = SoundProcessorFactory.CreateDecoder(stream, ownStream);
             if (_decoder != null)
             {
                 _info = _decoder.SampleInfo; //_decoder.Open(stream);
@@ -77,22 +77,6 @@ namespace Cgen.Audio
             {
                 throw new NotSupportedException("The specified sound is not supported.");
             }
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Music"/> class
-        /// from existing <see cref="Music"/> class.
-        /// 
-        /// May share same resources as the specified instance.
-        /// </summary>
-        /// <param name="instance"></param>
-        public Music(Music instance)
-            : this()
-        {
-            _decoder = instance._decoder;
-            _info    = instance._info;
-
-            Initialize(_info.ChannelCount, _info.SampleRate);
         }
 
         /// <summary>
