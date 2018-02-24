@@ -133,9 +133,13 @@ namespace Cgen.Audio
 
         internal void Enqueue(SoundSource source, bool hardEnqueue = false)
         {
-            // Add to playing sources, or if it is a hard enqueue, remove it from the pool
+            // Add to playing sources, or if it is a hard enqueue, remove it from everywhere
             if (hardEnqueue)
+            {
                 _allPools.Remove(source.Handle);
+                _pool.Remove(source.Handle);
+                _sources.Remove(source);
+            }
             else
                 _sources.Add(source);
         }
@@ -159,13 +163,13 @@ namespace Cgen.Audio
             }
 
             // Check whether the number of playing sounds is exceed the limit
-            if (_allPools.Count + _sources.Count >= MAX_SOURCE_COUNT)
+            if (_sources.Count >= MAX_SOURCE_COUNT)
             {
                 // Force to recycle unused source
                 Update();
 
                 // Check again if it exceed the limit
-                if (_allPools.Count + _sources.Count >= MAX_SOURCE_COUNT)
+                if (_sources.Count >= MAX_SOURCE_COUNT)
                 {
                     // It still exceed and throw the exception
                     throw new InvalidOperationException("Failed to play the source:\n" +
@@ -173,13 +177,19 @@ namespace Cgen.Audio
                 }
             }
 
-            // Always get (or create) handle from the pool each time source need to play.
-            source.Handle = GetSource();
+            // If the source is not paused, most likely it's stopped and it need to retrieve new handle
+            // Playing sources also have currently valid handle in use, don't override them.
+            if (source.Status != SoundStatus.Playing && source.Status != SoundStatus.Paused)
+            {
+                // Always get (or create) handle from the pool each time source need to play.
+                // Unless it is paused.
+                source.Handle = GetSource();
 
-            // Additionally, we need reset source state in case it is retrieved from pool
-            // The handle could be used by different sets of states
-            // Thus resetting state should fix overlapping states problem
-            source.ResetState();
+                // Additionally, we need reset source state in case it is retrieved from pool
+                // The handle could be used by different sets of states
+                // Thus resetting state should fix overlapping states problem
+                source.ResetState();
+            }
 
             try
             {
@@ -319,7 +329,7 @@ namespace Cgen.Audio
             for (int i = _sources.Count - 1; i >= 0; i--)
             {
                 if (_sources[i] != null && _sources[i].Status == SoundStatus.Paused)
-                    _sources[i].Play();
+                    Play(_sources[i]);
             }
         }
 
