@@ -1,6 +1,7 @@
-[submodule "Source/Cgen.Audio/Dependencies/NVorbis"]
-	path = Source/Cgen.Audio/Dependencies/NVorbis
-	url = https://github.com/ioctlLR/NVorbis.git
 [submodule "Source/Cgen.Audio/Dependencies/VorbisEncoder"]
 	path = Source/Cgen.Audio/Dependencies/VorbisEncoder
 	url = https://github.com/SteveLillis/.NET-Ogg-Vorbis-Encoder.git
+[submodule "Source/Cgen.Audio/Dependencies/NVorbis"]
+
+	path = Source/Cgen.Audio/Dependencies/NVorbis
+	url = https://github.com/ioctlLR/NVorbis.git
