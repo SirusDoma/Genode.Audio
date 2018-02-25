@@ -51,8 +51,7 @@ namespace Cgen.Audio
         /// </summary>
         public abstract bool IsLooping
         {
-            get;
-            set;
+            get; set;
         }
 
         /// <summary>
@@ -60,8 +59,7 @@ namespace Cgen.Audio
         /// </summary>
         public abstract TimeSpan PlayingOffset
         {
-            get;
-            set;
+            get; set;
         }
 
         /// <summary>
@@ -259,7 +257,8 @@ namespace Cgen.Audio
         /// </summary>
         public bool Validate()
         {
-            return ALChecker.Check(() => AL.IsSource(Handle));
+            // Prevent AL calls overhead by validate the handle against non positve number.
+            return Handle > 0 && ALChecker.Check(() => AL.IsSource(Handle));
         }
 
         /// <summary>
