@@ -188,7 +188,9 @@ namespace Cgen.Audio
         public override void Dispose()
         {
             base.Dispose();
+
             Buffer?.Dispose();
+            Buffer = null;
         }
     }
 }
