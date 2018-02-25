@@ -27,6 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Dependencies\NVorbis\NVorbis\Properties\**" />
     <Compile Remove="Dependencies\NVorbis\OpenTKSupport\**" />
     <Compile Remove="Dependencies\NVorbis\TestApp\**" />
     <Compile Remove="Dependencies\NVorbis\TestFiles\**" />
@@ -35,6 +36,7 @@
     <Compile Remove="Dependencies\VorbisEncoder\Encode Example\**" />
     <Compile Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
     <Compile Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\NVorbis\Properties\**" />
     <EmbeddedResource Remove="Dependencies\NVorbis\OpenTKSupport\**" />
     <EmbeddedResource Remove="Dependencies\NVorbis\TestApp\**" />
     <EmbeddedResource Remove="Dependencies\NVorbis\TestFiles\**" />
@@ -43,6 +45,7 @@
     <EmbeddedResource Remove="Dependencies\VorbisEncoder\Encode Example\**" />
     <EmbeddedResource Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
     <EmbeddedResource Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+    <None Remove="Dependencies\NVorbis\NVorbis\Properties\**" />
     <None Remove="Dependencies\NVorbis\OpenTKSupport\**" />
     <None Remove="Dependencies\NVorbis\TestApp\**" />
     <None Remove="Dependencies\NVorbis\TestFiles\**" />
