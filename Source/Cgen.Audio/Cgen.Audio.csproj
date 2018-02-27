@@ -84,7 +84,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="OpenTK.dll.config">
+    <None Update="CgenAudio.dll.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
