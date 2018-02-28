@@ -91,7 +91,7 @@ namespace Cgen.Audio
             long count = _decoder.Read(samples, samples.Length);
 
             // Remove the gap when processing last buffer
-            //Array.Resize(ref samples, (int)count);
+            Array.Resize(ref samples, (int)count);
 
             // Check if we have reached the end of the audio file
             return count == _sampleCount;
@@ -121,12 +121,6 @@ namespace Cgen.Audio
 
             // Initialize the stream
             base.Initialize(channelCount, sampleRate);
-        }
-
-        protected internal override void ResetBuffer()
-        {
-            _decoder?.Dispose();
-            base.ResetBuffer();
         }
 
         /// <summary>
