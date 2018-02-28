@@ -265,6 +265,8 @@ namespace Cgen.Audio
             // Destroy the buffer
             if (ALChecker.Check(() => AL.IsBuffer(Handle)))
                 ALChecker.Check(() => AL.DeleteBuffer(Handle));
+
+            _samples = null;
         }
     }
 }

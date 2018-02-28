@@ -178,6 +178,7 @@ namespace Cgen.Audio
                 ALChecker.Check(() => AL.Source(Handle, ALSourcei.Buffer, 0));
 
                 Buffer?.DetachSound(this);
+                Buffer?.Dispose();
                 Buffer = null;
             }
         }

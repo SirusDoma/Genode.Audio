@@ -406,16 +406,18 @@ namespace Cgen.Audio
                 bool valid = _sources[i].Validate();
                 if (!valid || _sources[i].Status == SoundStatus.Stopped)
                 {
-                    // Reset the buffer to freed memory
-                    // The implementation must not interact with the source if handle is invalid
-                    _sources[i].ResetBuffer();
-
-                    // Queue the source from the pool and remove from the playing list if it valid
-                    // otherwise, hard enqueue it, as it is no longer can be pooled
                     if (valid)
+                    {
+                        // Reset the buffer to freed memory
+                        // The implementation must not interact with the source if handle is invalid
+                        _sources[i].ResetBuffer();
+
+                        // Queue the source from the pool and remove from the playing list if it valid
+                        // otherwise, hard enqueue it, as it is no longer can be pooled
                         Queue(_sources[i]);
+                    }
                     else
-                        Enqueue(_sources[i], true);
+                        _sources[i].Dispose();
                 }
             }
         }
