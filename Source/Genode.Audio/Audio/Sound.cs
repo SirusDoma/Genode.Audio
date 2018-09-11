@@ -239,7 +239,10 @@ namespace Genode.Audio
             base.Dispose(disposing);
 
             Decoder?.Dispose();
-            ALChecker.Check(() => AL.DeleteBuffer(Handle));
+            if (Handle > 0)
+            {
+                ALChecker.Check(() => AL.DeleteBuffer(Handle));
+            }
         }
     }
 }
