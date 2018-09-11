@@ -19,7 +19,7 @@ namespace Genode.Audio
         protected internal override Sound Buffer
         {
             get => buffer;
-            protected set
+            set
             {
                 // Detach existing buffer
                 if (buffer != null)

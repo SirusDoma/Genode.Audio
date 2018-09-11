@@ -26,7 +26,7 @@ namespace Genode.Audio
         /// <summary>
         /// Gets the <see cref="Sound"/> buffer of the current instance of the <see cref="SoundChannel"/> object.
         /// </summary>
-        protected internal virtual Sound Buffer { get; protected set; }
+        protected internal virtual Sound Buffer { get; set; }
 
         /// <summary>
         /// Gets the OpenAL source identifier.

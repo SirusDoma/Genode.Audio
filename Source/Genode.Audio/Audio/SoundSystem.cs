@@ -113,7 +113,7 @@ namespace Genode.Audio
         /// <param name="filename">The path of audio file.</param>
         /// <param name="mode">Specifies a value indicating whether the whole buffer should be filled immediately or streamed later.</param>
         /// <returns>A sound buffer of given <see cref="Stream"/>.</returns>
-        public Sound LoadSound(string filename, BufferMode mode)
+        public Sound LoadSound(string filename, BufferMode mode = BufferMode.Sample)
         {
             return LoadSound(File.Open(filename, FileMode.Open, FileAccess.Read), mode);
         }
@@ -124,7 +124,7 @@ namespace Genode.Audio
         /// <param name="buffer">An array of bytes that contains audio samples.</param>
         /// <param name="mode">Specifies a value indicating whether the whole buffer should be filled immediately or streamed later.</param>
         /// <returns>A sound buffer of given <see cref="Stream"/>.</returns>
-        public Sound LoadSound(byte[] buffer, BufferMode mode)
+        public Sound LoadSound(byte[] buffer, BufferMode mode = BufferMode.Sample)
         {
             return LoadSound(new MemoryStream(buffer), mode);
         }
@@ -135,7 +135,7 @@ namespace Genode.Audio
         /// <param name="stream"><see cref="Stream"/> that contains audio samples.</param>
         /// <param name="mode">Specifies a value indicating whether the whole buffer should be filled immediately or streamed later.</param>
         /// <returns>A sound buffer of given <see cref="Stream"/>.</returns>
-        public Sound LoadSound(Stream stream, BufferMode mode)
+        public Sound LoadSound(Stream stream, BufferMode mode = BufferMode.Sample)
         {
             return new Sound(stream, mode);
         }
@@ -189,6 +189,31 @@ namespace Genode.Audio
 
             channel.Play();
             return Queue(channel);
+        }
+        
+        /// <summary>
+        /// Start playing the <see cref="SoundChannel"/>.
+        /// </summary>
+        /// <param name="sound"><see cref="Sound"/> to play.</param>
+        /// <returns>A playing <see cref="SoundChannel"/>.</returns>
+        public T Play<T>(Sound sound)
+            where T : SoundStream, new()
+        {
+            // Construct sound channel based on specified implementation
+            SoundChannel channel = new T();
+            channel.Handle = GenSource();
+            channel.Buffer = sound;
+
+            // Assign sample information
+            channel.SampleCount  = sound.SampleCount;
+            channel.ChannelCount = sound.ChannelCount;
+            channel.SampleRate   = sound.SampleRate;
+
+            // Play the channel
+            channel.Play();
+
+            // Queue channel into source pool and return it
+            return Queue(channel) as T;
         }
 
         /// <summary>
