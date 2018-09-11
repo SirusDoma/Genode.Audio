@@ -10,24 +10,6 @@ using Genode.Internal.OpenAL;
 namespace Genode.Audio
 {
     /// <summary>
-    /// Represents playback buffer mode.
-    /// </summary>
-    public enum BufferMode
-    {
-        /// <summary>
-        /// System will load whole audio buffer directly into memory at load time.
-        /// Use this for small audio sample (e.g: Sound FX)
-        /// </summary>
-        Sample,
-
-        /// <summary>
-        /// System will decode audio buffer at runtime. 
-        /// Use this for large audio sample (e.g: Background Music)
-        /// </summary>
-        Stream
-    }
-
-    /// <summary>
     /// Represents an array of sound samples.
     /// </summary>
     /// <inheritdoc/>
