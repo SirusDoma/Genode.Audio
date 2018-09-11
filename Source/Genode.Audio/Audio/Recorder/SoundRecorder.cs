@@ -16,6 +16,19 @@ namespace Genode.Audio
     /// Represents abstract base class for capturing sound data.
     /// </summary>
     /// <inheritdoc/>
+    public abstract class SoundRecorder<T> : SoundRecorder
+        where T : class
+    {
+        /// <summary>
+        /// Get recorded <see cref="Output"/>.
+        /// </summary>
+        public T Output { get; protected set; }
+    }
+
+    /// <summary>
+    /// Represents abstract base class for capturing sound data.
+    /// </summary>
+    /// <inheritdoc/>
     public abstract class SoundRecorder : DisposableResource
     {
         /// <summary>
@@ -51,7 +64,7 @@ namespace Genode.Audio
         private int       channelCount;
 
         /// <summary>
-        /// Gets a value indicating whether the <see cref="SoundRecorder"/> is capturing.
+        /// Gets a value indicating whether the <see cref="SoundRecorder{T}"/> is capturing.
         /// </summary>
         public bool Capturing { get; private set; }
 
@@ -140,7 +153,7 @@ namespace Genode.Audio
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SoundRecorder"/> class.
+        /// Initializes a new instance of the <see cref="SoundRecorder{T}"/> class.
         /// </summary>
         public SoundRecorder()
         {
@@ -246,7 +259,7 @@ namespace Genode.Audio
         }
 
         /// <summary>
-        /// Request <see cref="SoundRecorder"/> to stop recording process.
+        /// Request <see cref="SoundRecorder{T}"/> to stop recording process.
         /// </summary>
         internal void Stop()
         {
@@ -288,7 +301,7 @@ namespace Genode.Audio
         }
 
         /// <summary>
-        /// When overriden, initialize recording initiation of <see cref="SoundRecorder"/>.
+        /// When overriden, initialize recording initiation of <see cref="SoundRecorder{T}"/>.
         /// </summary>
         protected internal abstract void Initialize();
         
@@ -306,7 +319,7 @@ namespace Genode.Audio
         protected internal abstract void Flush();
 
         /// <summary>
-        /// Releases the unmanaged resources used by the current instance of the <see cref="SoundRecorder"/> and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the current instance of the <see cref="SoundRecorder{T}"/> and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         /// <inheritdoc/>

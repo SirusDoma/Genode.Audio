@@ -5,21 +5,13 @@ using System.Text;
 namespace Genode.Audio
 {
     /// <summary>
-    /// Represents a <see cref="Audio.Sound"/> from recorded audio samples via <see cref="SoundRecorder"/>.
+    /// Represents a <see cref="Audio.Sound"/> from recorded audio samples via <see cref="SoundRecorder{T}"/>.
     /// </summary>
     /// <inheritdoc/>
-    internal sealed class SoundBufferRecorder : SoundRecorder
+    internal sealed class SoundBufferRecorder : SoundRecorder<Sound>
     {
         private List<short> samples;
         
-        /// <summary>
-        /// Get recorded <see cref="Output"/>.
-        /// </summary>
-        public Sound Output
-        {
-            get; private set;
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SoundBufferRecorder"/> class.
         /// </summary>
@@ -53,7 +45,7 @@ namespace Genode.Audio
         }
 
         /// <summary>
-        /// Flush the recorded samples from the buffer to <see cref="Output"/>.
+        /// Flush the recorded samples from the buffer to <see cref="Sound"/>.
         /// This will finalize the recording session.
         /// </summary>
         /// <exception cref="InvalidOperationException">Exception may occur in case Start() is not yet called.</exception>

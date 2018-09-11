@@ -56,13 +56,14 @@ namespace Genode.Audio
         }
 
         /// <summary>
-        /// Register a <see cref="SoundRecorder"/> into factory.
+        /// Register a <see cref="SoundRecorder{T}"/> into factory.
         /// </summary>
         /// <typeparam name="T">Type of output to register.</typeparam>
-        /// <typeparam name="V">Type of <see cref="SoundRecorder"/> to associated to the type of output.</typeparam>
+        /// <typeparam name="V">Type of <see cref="SoundRecorder{T}"/> to associated to the type of output.</typeparam>
         /// <returns><c>true</c> if the <see cref="SoundWriter"/> registered successfully; otherwise, false.</returns>
         public static bool RegisterRecorder<T, V>()
-            where V : SoundRecorder, new()
+            where T : class
+            where V : SoundRecorder<T>, new()
         {
             if (!recorders.ContainsKey(typeof(T)))
             {
@@ -96,10 +97,10 @@ namespace Genode.Audio
         }
         
         /// <summary>
-        /// Remove a registered <see cref="SoundRecorder"/> from factory.
+        /// Remove a registered <see cref="SoundRecorder{T}"/> from factory.
         /// </summary>
-        /// <typeparam name="T">Type of <see cref="SoundRecorder"/> to remove.</typeparam>
-        /// <returns><c>true</c> if the <see cref="SoundRecorder"/> removed successfully; otherwise, false.</returns>
+        /// <typeparam name="T">Type of <see cref="SoundRecorder{T}"/> to remove.</typeparam>
+        /// <returns><c>true</c> if the <see cref="SoundRecorder{T}"/> removed successfully; otherwise, false.</returns>
         public static bool RemoveRecorder<T>()
             where T : SoundReader, new()
         {
@@ -229,14 +230,14 @@ namespace Genode.Audio
         /// Get an instance of the <see cref="SoundReader"/> that can handle specified audio stream.
         /// </summary>
         /// <returns>An instance of <see cref="SoundReader"/> that can handle specified audio stream.</returns>
-        public static SoundRecorder GetRecorder<T>()
+        public static SoundRecorder<T> GetRecorder<T>()
             where T : class
         {
             foreach (var recorder in recorders)
             {
                 if (recorder.Key == typeof(T))
                 {
-                    return Activator.CreateInstance(recorder.Value) as SoundRecorder;
+                    return Activator.CreateInstance(recorder.Value) as SoundRecorder<T>;
                 }
             }
 

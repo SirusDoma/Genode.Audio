@@ -243,7 +243,7 @@ namespace Genode.Audio
         /// </summary>
         /// <param name="sampleRate">The samples rate of sound to use for recording, in samples per second.</param>
         /// <returns>An instance of <see cref="SoundRecorder"/> to manipulate recording properties and operations.</returns>
-        public SoundRecorder Capture(int sampleRate)
+        public SoundRecorder<Sound> Capture(int sampleRate = 44100)
         {
             return Capture<Sound>(sampleRate);
         }
@@ -253,8 +253,8 @@ namespace Genode.Audio
         /// </summary>
         /// <param name="sampleRate">The samples rate of sound to use for recording, in samples per second.</param>
         /// <typeparam name="T">The type of class that will hold recorded audio samples.</typeparam>
-        /// <returns>An instance of <see cref="SoundRecorder"/> to manipulate recording properties and operations.</returns>
-        public SoundRecorder Capture<T>(int sampleRate = 44100)
+        /// <returns>An instance of <see cref="SoundRecorder{T}"/> to manipulate recording properties and operations.</returns>
+        public SoundRecorder<T> Capture<T>(int sampleRate = 44100)
             where T : class
         {
             if (recorder == null)
@@ -262,7 +262,7 @@ namespace Genode.Audio
                 recorder = SoundProcessorFactory.GetRecorder<T>();
                 recorder.Start(sampleRate);
 
-                return recorder;
+                return recorder as SoundRecorder<T>;
             }
             
             throw new Exception("Cannot start audio capture while another capture is running.");
