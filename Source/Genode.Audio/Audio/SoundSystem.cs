@@ -180,7 +180,11 @@ namespace Genode.Audio
         /// <returns>A playing <see cref="SoundChannel"/>.</returns>
         public SoundChannel Play(SoundChannel channel)
         {
-            if (channel.Status != SoundStatus.Paused)
+            if (channel.Handle <= 0)
+            {
+                channel.Handle = GenSource();
+            }
+            else if (channel.Status != SoundStatus.Paused)
             {
                 channel.Stop();
                 channel.Handle = GenSource();
