@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-using Cgen;
-using Cgen.Audio;
+using Genode;
+using Genode.Audio;
 
 namespace Example
 {
@@ -18,37 +18,33 @@ namespace Example
                 Console.CursorVisible = false;
 
                 // Now with music
-                var music = new Music("./Resources/orchestral.ogg");
-                system.Play(music);
+                var music = system.LoadSound("./Resources/orchestral.ogg", BufferMode.Stream);
+                var musicChannel = system.Play(music);
 
                 var length = music.Duration;
                 Console.WriteLine("Playing: ochestral");
                 Console.WriteLine("Implementation: Music");
-                while (music.Status == SoundStatus.Playing)
+                while (musicChannel.Status == SoundStatus.Playing)
                 {
-                    system.Update();
-                    var offset = music.PlayingOffset;
-                    Console.Write("\r{0}:{1}:{2} - {3}:{4}:{5}",
-                        offset.Minutes.ToString("00"), offset.Seconds.ToString("00"), offset.Milliseconds.ToString("000"),
-                        length.Minutes.ToString("00"), length.Seconds.ToString("00"), length.Milliseconds.ToString("000")
-                    );
+                    system.Update(0D);
+                    
+                    var offset = musicChannel.PlayingOffset;
+                    Console.Write($"\r{offset:mm\\:ss\\:ff} - {length:mm\\:ss\\:ff}");
                 }
-
+                
                 // Load and play the audio with Sound class
-                var sound = new Sound(new SoundBuffer("./Resources/canary.wav"));
-                system.Play(sound);
+                var sound = system.LoadSound("./Resources/canary.wav", BufferMode.Sample);
+                var soundChannel = system.Play(sound);
 
                 length = sound.Duration;
                 Console.WriteLine("\n\nPlaying: canary.wav");
                 Console.WriteLine("Implementation: Sound");
-                while (sound.Status == SoundStatus.Playing)
+                while (soundChannel.Status == SoundStatus.Playing)
                 {
-                    system.Update();
-                    var offset = sound.PlayingOffset;
-                    Console.Write("\r{0}:{1}:{2} - {3}:{4}:{5}",
-                        offset.Minutes.ToString("00"), offset.Seconds.ToString("00"), offset.Milliseconds.ToString("000"),
-                        length.Minutes.ToString("00"), length.Seconds.ToString("00"), length.Milliseconds.ToString("000")
-                    );
+                    system.Update(0D);
+                    
+                    var offset = soundChannel.PlayingOffset;
+                    Console.Write($"\r{offset:mm\\:ss\\:ff} - {length:mm\\:ss\\:ff}");
                 }
 
                 Console.WriteLine("\n\nPress any key to exit program.");

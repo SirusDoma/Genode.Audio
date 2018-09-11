@@ -1,0 +1,95 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Platforms>x64;x86</Platforms>
+    <IntermediateOutputPath>..\..\Temp</IntermediateOutputPath>
+    <AssemblyName>Genode.Audio</AssemblyName>
+    <RootNamespace>Genode.Audio</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutputPath>..\..\Build\Debug\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <OutputPath>..\..\Build\Debug\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutputPath>..\..\Build\Release\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <OutputPath>..\..\Build\Release\</OutputPath>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Dependencies\NVorbis\NVorbis\Properties\**" />
+    <Compile Remove="Dependencies\NVorbis\OpenTKSupport\**" />
+    <Compile Remove="Dependencies\NVorbis\TestApp\**" />
+    <Compile Remove="Dependencies\NVorbis\TestFiles\**" />
+    <Compile Remove="Dependencies\NVorbis\TestHarness\**" />
+    <Compile Remove="Dependencies\NVorbis\UnitTests\**" />
+    <Compile Remove="Dependencies\VorbisEncoder\Encode Example\**" />
+    <Compile Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
+    <Compile Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\NVorbis\Properties\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\OpenTKSupport\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\TestApp\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\TestFiles\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\TestHarness\**" />
+    <EmbeddedResource Remove="Dependencies\NVorbis\UnitTests\**" />
+    <EmbeddedResource Remove="Dependencies\VorbisEncoder\Encode Example\**" />
+    <EmbeddedResource Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
+    <EmbeddedResource Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+    <None Remove="Dependencies\NVorbis\NVorbis\Properties\**" />
+    <None Remove="Dependencies\NVorbis\OpenTKSupport\**" />
+    <None Remove="Dependencies\NVorbis\TestApp\**" />
+    <None Remove="Dependencies\NVorbis\TestFiles\**" />
+    <None Remove="Dependencies\NVorbis\TestHarness\**" />
+    <None Remove="Dependencies\NVorbis\UnitTests\**" />
+    <None Remove="Dependencies\VorbisEncoder\Encode Example\**" />
+    <None Remove="Dependencies\VorbisEncoder\OggVorbisEncoder.Example\**" />
+    <None Remove="Dependencies\VorbisEncoder\OggVorbisEncoder\Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Dependencies\NVorbis\.git" />
+    <None Remove="Dependencies\NVorbis\.gitignore" />
+    <None Remove="Dependencies\NVorbis\LICENSE" />
+    <None Remove="Dependencies\NVorbis\Makefile" />
+    <None Remove="Dependencies\NVorbis\NVorbis.nuspec" />
+    <None Remove="Dependencies\NVorbis\NVorbis.OpenTKSupport.nuspec" />
+    <None Remove="Dependencies\NVorbis\NVorbis\Makefile" />
+    <None Remove="Dependencies\NVorbis\publish.cmd" />
+    <None Remove="Dependencies\NVorbis\README" />
+    <None Remove="Dependencies\NVorbis\README.md" />
+    <None Remove="Dependencies\NVorbis\TODO" />
+    <None Remove="Dependencies\VorbisEncoder\.git" />
+    <None Remove="Dependencies\VorbisEncoder\.gitattributes" />
+    <None Remove="Dependencies\VorbisEncoder\.gitignore" />
+    <None Remove="Dependencies\VorbisEncoder\LICENSE" />
+    <None Remove="Dependencies\VorbisEncoder\README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTK.NETCore" Version="1.1.2749.6433" />
+    <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Dependencies\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Genode.Audio.dll.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

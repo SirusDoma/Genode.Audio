@@ -28,7 +28,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Cgen.Audio\Cgen.Audio.csproj" />
+    <ProjectReference Include="..\Genode.Audio\Genode.Audio.csproj" />
   </ItemGroup>
 
   <ItemGroup>
