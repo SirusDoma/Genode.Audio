@@ -237,6 +237,17 @@ namespace Genode.Audio
         {
             channel.Stop();
         }
+        
+        /// <summary>
+        /// Stop recording audio.
+        /// </summary>
+        public void Stop(SoundRecorder recorder)
+        {
+            if (recorder?.Capturing ?? false)
+            {
+                recorder.Stop();
+            }
+        }
 
         /// <summary>
         /// Start capturing audio with default audio input device.
