@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using OpenTK;
 using OpenTK.Audio;
 using OpenTK.Audio.OpenAL;
@@ -62,6 +63,7 @@ namespace Genode.Audio
         private short[]   samples;
         private string    device;
         private int       channelCount;
+        private Task      task;
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="SoundRecorder{T}"/> is capturing.
@@ -221,7 +223,6 @@ namespace Genode.Audio
         /// Request <see cref="SoundReader"/> to record audio.
         /// </summary>
         /// <param name="sampleRate">The samples rate of sound to use for recording, in samples per second.</param>
-        /// <returns></returns>
         internal void Start(int sampleRate = 44100)
         {
             // Check if the device can do audio capture
@@ -256,6 +257,9 @@ namespace Genode.Audio
             // Start the capture
             CaptureChecker.Check(CaptureDevice, () => CaptureDevice.Start());
             Capturing = true;
+
+            // Launch recording thread
+            task = Task.Run(() => Update());
         }
 
         /// <summary>
@@ -267,8 +271,11 @@ namespace Genode.Audio
             if (Capturing)
             {
                 // Force to get remaining samples
-                Capturing = false;
                 Record();
+                
+                // Stop recording thread
+                Capturing = false;
+                task?.Wait();
 
                 // Notify derived class
                 Flush();
@@ -276,47 +283,38 @@ namespace Genode.Audio
         }
         
         /// <summary>
-        /// Update the recorded data in the buffer.
+        /// Update the recorded data from recording buffer.
         /// </summary>
-        internal void Update()
+        private async Task Update()
         {
-            if (ProcessingInterval > 0)
-            {
-                if (!stopwatch.IsRunning)
-                {
-                    stopwatch.Start();
-                }
-                else if (stopwatch.ElapsedMilliseconds > ProcessingInterval)
-                {
-                    stopwatch.Reset();
-                    stopwatch.Start();
-
-                    Record();
-                }
-            }
-            else
+            while (Capturing)
             {
                 Record();
+
+                if (ProcessingInterval > 0)
+                {
+                    await Task.Delay((int) ProcessingInterval);
+                }
             }
         }
 
         /// <summary>
         /// When overriden, initialize recording initiation of <see cref="SoundRecorder{T}"/>.
         /// </summary>
-        protected internal abstract void Initialize();
+        protected abstract void Initialize();
         
         /// <summary>
         /// When overriden, process the given samples as recoded data.
         /// </summary>
         /// <param name="samples">The audio samples to process.</param>
         /// <returns><c>true</c> if there's more data to process; otherwise, <c>false</c>.</returns>
-        protected internal abstract bool ProcessSamples(short[] samples);
+        protected abstract bool ProcessSamples(short[] samples);
 
         /// <summary>
         /// When overriden, flush the recorded samples from the buffer.
         /// This will finalize the recording session.
         /// </summary>
-        protected internal abstract void Flush();
+        protected abstract void Flush();
 
         /// <summary>
         /// Releases the unmanaged resources used by the current instance of the <see cref="SoundRecorder{T}"/> and optionally releases the managed resources.

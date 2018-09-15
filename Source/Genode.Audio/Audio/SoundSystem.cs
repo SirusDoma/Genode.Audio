@@ -268,7 +268,7 @@ namespace Genode.Audio
         public SoundRecorder<T> Capture<T>(int sampleRate = 44100)
             where T : class
         {
-            if (recorder == null)
+            if (recorder == null || !recorder.Capturing)
             {
                 recorder = SoundProcessorFactory.GetRecorder<T>();
                 recorder.Start(sampleRate);
@@ -285,15 +285,6 @@ namespace Genode.Audio
         /// <param name="delta">The delta of current game frame.</param>
         public void Update(double delta)
         {
-            if (recorder != null)
-            {
-                recorder?.Update();
-                if (!recorder.Capturing)
-                {
-                    recorder = null;
-                }
-            }
-            
             channels.RemoveWhere(ch => ch.IsInvalid);
         }
 

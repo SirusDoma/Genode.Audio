@@ -26,7 +26,7 @@ namespace Genode.Audio
         /// Initialize recording initiation of <see cref="SoundBufferRecorder"/>.
         /// </summary>
         /// <inheritdoc/>
-        protected internal override void Initialize()
+        protected override void Initialize()
         {
             Output = new Sound(new short[0], ChannelCount, SampleRate);
             samples.Clear();
@@ -38,7 +38,7 @@ namespace Genode.Audio
         /// <param name="samples">The audio samples to process.</param>
         /// <returns><c>true</c> if there's more data to process; otherwise, <c>false</c>.</returns>
         /// <inheritdoc/>
-        protected internal override bool ProcessSamples(short[] samples)
+        protected override bool ProcessSamples(short[] samples)
         {
             this.samples.AddRange(samples);
             return true;
@@ -50,7 +50,7 @@ namespace Genode.Audio
         /// </summary>
         /// <exception cref="InvalidOperationException">Exception may occur in case Start() is not yet called.</exception>
         /// <inheritdoc/>
-        protected internal override void Flush()
+        protected override void Flush()
         {
             if (Output == null)
             {
