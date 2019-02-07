@@ -204,14 +204,17 @@ namespace Genode.Audio
             where T : SoundStream, new()
         {
             // Construct sound channel based on specified implementation
-            SoundChannel channel = new T();
-            channel.Handle = GenSource();
-            channel.Buffer = sound;
+            SoundChannel channel = new T
+            {
+                // Source and buffer
+                Handle = GenSource(),
+                Buffer = sound,
 
-            // Assign sample information
-            channel.SampleCount  = sound.SampleCount;
-            channel.ChannelCount = sound.ChannelCount;
-            channel.SampleRate   = sound.SampleRate;
+                // Assign sample information
+                SampleCount = sound.SampleCount,
+                ChannelCount = sound.ChannelCount,
+                SampleRate = sound.SampleRate
+            };
 
             // Play the channel
             channel.Play();

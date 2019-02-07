@@ -291,9 +291,7 @@ namespace Genode
         public void AddListener<T>()
             where T : TraceListener, new()
         {
-            var listener = new T();
-            listener.Name = nameof(T);
-
+            var listener = new T { Name = nameof(T) };
             Trace.Listeners.Add(listener);
         }
 

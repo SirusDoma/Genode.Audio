@@ -59,11 +59,11 @@ namespace Genode.Audio
             }
         }
 
-        private Stopwatch stopwatch;
-        private short[]   samples;
-        private string    device;
-        private int       channelCount;
-        private Task      task;
+        private readonly Stopwatch stopwatch;
+        private short[]            samples;
+        private string             device;
+        private int                channelCount;
+        private Task               task;
 
         /// <summary>
         /// Gets a value indicating whether the <see cref="SoundRecorder{T}"/> is capturing.

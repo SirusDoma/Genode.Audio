@@ -157,12 +157,14 @@ namespace Genode.Audio
                 throw new ArgumentException("No such encoder exists in factory");
             }
 
-            var writer = new T();
-            writer.BaseStream   = stream;
-            writer.SampleRate   = sampleRate;
-            writer.ChannelCount = channelCount;
-            writer.Initialize(stream, sampleRate, channelCount);
+            var writer = new T
+            {
+                BaseStream = stream,
+                SampleRate = sampleRate,
+                ChannelCount = channelCount
+            };
 
+            writer.Initialize(stream, sampleRate, channelCount);
             return writer;
         }
         

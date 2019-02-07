@@ -30,7 +30,7 @@ namespace Genode.Audio
 
         private Task task;
         private int[] buffers = new int[BufferCount];
-        private int[] bufferLoop = new int[BufferCount];
+        private readonly int[] bufferLoop = new int[BufferCount];
         private bool streaming;
         private SoundStatus state;
         private int processed;
