@@ -44,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="NVorbis" Version="0.8.5" />
+    <PackageReference Include="NVorbis" Version="0.8.6" />
     <PackageReference Include="OggVorbisEncoder" Version="1.1.0" />
     <PackageReference Include="ppy.OpenTK.NS20" Version="1.0.7" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />

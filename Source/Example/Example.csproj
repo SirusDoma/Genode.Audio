@@ -6,35 +6,30 @@
     <Platforms>x64;x86</Platforms>
     <AssemblyName>Example</AssemblyName>
     <RootNamespace>Example</RootNamespace>
-    <BaseIntermediateOutputPath>../../Temp/</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\..\Build\Debug\</OutputPath>
-    <BaseIntermediateOutputPath>../../Temp/</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <PlatformTarget>x86</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\..\Build\Debug\</OutputPath>
-    <BaseIntermediateOutputPath>../../Temp/</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\..\Build\Release\</OutputPath>
-    <BaseIntermediateOutputPath>../../Temp/</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
     <PlatformTarget>x86</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>..\..\Build\Release\</OutputPath>
-    <BaseIntermediateOutputPath>../../Temp/</BaseIntermediateOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
