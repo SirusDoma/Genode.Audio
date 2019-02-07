@@ -39,6 +39,10 @@ List of dependencies:
 
 ## Version History ##
 
+### v3.0.7
+- Upgrade NVorbis dependency, now support .NET Standard natively
+- CoreRT build is now supported
+
 ### v3.0.5
 - Add support to play custom `SoundStream` implementation
 - Fix source pooling system not generating native audio handle when playing / replaying `SoundChannel`
