@@ -33,6 +33,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Temp\**" />
+    <EmbeddedResource Remove="Temp\**" />
+    <None Remove="Temp\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Genode.Audio\Genode.Audio.csproj" />
   </ItemGroup>
 
